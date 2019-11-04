@@ -1,6 +1,21 @@
+"""
+  ____       _ ____  _ _         _____ _____ ____  __  __ _ _         _____           _ _    _ _
+ / ___|  ___(_) __ )(_) |_ ___  |_   _| ____|  _ \|  \/  (_) |_ ___  |_   _|__   ___ | | | _(_) |_
+ \___ \ / __| |  _ \| | __/ _ \   | | |  _| | |_) | |\/| | | __/ _ \   | |/ _ \ / _ \| | |/ / | __|
+  ___) | (__| | |_) | | ||  __/   | | | |___|  _ <| |  | | | ||  __/   | | (_) | (_) | |   <| | |_
+ |____/ \___|_|____/|_|\__\___|   |_| |_____|_| \_\_|  |_|_|\__\___|   |_|\___/ \___/|_|_|\_\_|\__|
+
+Preprocessing functions- using your TERMite output to make AI-ready data
+
+"""
+
+__author__ = 'SciBite DataScience'
+__version__ = '0.2'
+__copyright__ = '(c) 2019, SciBite Ltd'
+__license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
+
 import requests
 import pandas as pd
-import json
 
 
 class DocStoreRequestBuilder():
@@ -71,7 +86,7 @@ class DocStoreRequestBuilder():
 
         return resp_json
 
-    def get_dcc_docs_query(self, query_string, source, options_dict):
+    def get_boolean_docs(self, query_string, source, options_dict):
         """
         Retrieve document co-occurrence of provided entities
         :param query_string: query to be completed
@@ -192,14 +207,3 @@ def get_docstore_scc_df(json):
 
     scc_df = pd.DataFrame(all_hits_list, columns=["document_id", "document_date", "scc_sentence"])
     return (scc_df)
-
-
-sample_query = "( type:ANAT AND id:PROTYP$PROTYP9 ) NOT ( id:GENE$ALK OR id:GENE$RET OR id:GENE$PDL-1 OR id:GENE$PARP OR id:GENE$BRAF OR id:GENE$EGFR OR id:GENE$mTOR OR id:GENE$CDK4 OR id:GENE$BDK )"
-dic_opt = {
-    "filters": json.dumps({"rangefilters": [{"field": "document_date", "from": "2003-10-31", "to": "2019-10-31"}]})}
-
-sample_query_2 = "type:ANAT"
-docs = DocStoreRequestBuilder()
-print(docs.get_dcc_docs_query(
-    sample_query_2,
-    "immunonc", dic_opt))
