@@ -60,7 +60,7 @@ class DocStoreRequestBuilder():
         :return: results of search in json format
         """
         base_url = self.url
-        query_url = (base_url) + "/api/ds/v1/search/co/document/{}/*/*/*".format(source)
+        query_url = (base_url) + "https://tyrion.scibite.com:9999/api/ds/v1/search/document/docs/{}/*/*/*".format(source)
         entity_string = " ".join(entity_list)
 
         options = {"fmt": "json",
