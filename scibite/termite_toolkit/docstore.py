@@ -171,7 +171,11 @@ def get_docstore_dcc_df(json):
 
         doc_id = hit["id"]
         doc_date = (hit["documentDate"])[0:10]
-        authors = hit["authors"]
+        authors = ""
+        try:
+            authors = hit["authors"]
+        except:
+            pass
         citation = hit["citation"]
 
         hit_dict.update([("document_id", doc_id), ("document_date", doc_date), ("authors", authors),
