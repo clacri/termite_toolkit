@@ -60,7 +60,7 @@ class DocStoreRequestBuilder():
         :return: results of search in json format
         """
         base_url = self.url
-        query_url = (base_url) + "/api/ds/v1/search/document/docs/{}/*/*/*".format(source)
+        query_url = (base_url) + "/api/ds/v1/search/co/document/{}/*/*/*".format(source)
         entity_string = " ".join(entity_list)
 
         options = {"fmt": "json",
@@ -169,18 +169,13 @@ def get_docstore_dcc_df(json):
     for hit in all_hits:
         hit_dict = {}
 
-        doc_title = ""
-        doc_text = ""
-        for section in (hit["section"]):
-            if section["sectionId"] == 0:
-                doc_title += section["titleText"]
-                doc_text += section["text"]
         doc_id = hit["id"]
-        authors = hit["authors"]
         doc_date = (hit["documentDate"])[0:10]
+        authors = hit["authors"]
+        citation = hit["citation"]
 
-        hit_dict.update([("document_id", doc_id), ("title", doc_title), ("authors", authors),
-                         ("date", doc_date), ("text", doc_text)])
+        hit_dict.update([("document_id", doc_id), ("document_date", doc_date), ("authors", authors),
+                         ("citation", citation)])
         all_hit_list.append(hit_dict)
 
     dcc_df = pd.DataFrame(all_hit_list)
