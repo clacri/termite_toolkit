@@ -10,7 +10,7 @@ Preprocessing functions- using your TERMite output to make AI-ready data
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.2'
+__version__ = '0.3'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -81,7 +81,7 @@ class DocStoreRequestBuilder():
         except:
             pass
 
-        response = requests.get(query_url, params=options, verify=False)  # More possible authentication
+        response = requests.get(query_url, params=options, verify=False)
         resp_json = response.json()
 
         return resp_json
@@ -116,7 +116,7 @@ class DocStoreRequestBuilder():
         except:
             pass
 
-        response = requests.get(query_url, params=options, verify=False)  # More possible authentication
+        response = requests.get(query_url, params=options, verify=False)
         resp_json = response.json()
 
         return resp_json
@@ -163,26 +163,45 @@ def get_docstore_dcc_df(json):
     :param json: dcc json
     :return: dcc dataframe
     """
-    all_hits = json["hits"]
-    all_hit_list = []
+    df_rows = []
+    hits = json["hits"]
 
-    for hit in all_hits:
+    for h in hits:
         hit_dict = {}
 
-        doc_id = hit["id"]
-        doc_date = (hit["documentDate"])[0:10]
+        # Document id
+        doc_id = h["id"]
+
+        # Document date
+        doc_date = (h["documentDate"])[0:10]
+
+        # Title
+        highlighted_sections = (h['highlightedSections'])[0]
+        title_words = highlighted_sections['titleWords']
+
+        title_list = []
+
+        for t in title_words:
+            word = (t['p']).rstrip()
+            title_list.append(word)
+
+        title = ((' ').join(title_list))
+
+        # Authors
         authors = ""
         try:
-            authors = hit["authors"]
+            authors = h["authors"]
         except:
             pass
-        citation = hit["citation"]
 
-        hit_dict.update([("document_id", doc_id), ("document_date", doc_date), ("authors", authors),
-                         ("citation", citation)])
-        all_hit_list.append(hit_dict)
+        # Citation
+        citation = h["citation"]
 
-    dcc_df = pd.DataFrame(all_hit_list)
+        hit_dict.update([("document_id", doc_id), ("document_date", doc_date), ("title", title),
+                         ("authors", authors), ("citation", citation)])
+        df_rows.append(hit_dict)
+
+    dcc_df = pd.DataFrame(df_rows)
     return (dcc_df)
 
 
@@ -192,17 +211,23 @@ def get_docstore_scc_df(json):
      :param json: scc json
      :return: scc dataframe
      """
-    all_hits = json["hits"]
-    all_hits_list = []
+    df_rows = []
+    hits = json["hits"]
 
-    for hit in all_hits:
+    for h in df_rows:
         hit_dict = {}
-        doc_id = hit["docId"]
-        doc_date = (hit["docDate"])[0:10]
-        doc_sent = hit["sentence"]
+
+        # Document id
+        doc_id = h["docId"]
+
+        # Document date
+        doc_date = (h["docDate"])[0:10]
+
+        # SCC Sentence
+        doc_sent = h["sentence"]
 
         hit_dict.update([("document_id", doc_id), ("document_date", doc_date), ("scc_sentence", doc_sent)])
-        all_hits_list.append(hit_dict)
+        df_rows.append(hit_dict)
 
-    scc_df = pd.DataFrame(all_hits_list, columns=["document_id", "document_date", "scc_sentence"])
+    scc_df = pd.DataFrame(df_rows, columns=["document_id", "document_date", "scc_sentence"])
     return (scc_df)
