@@ -1,6 +1,6 @@
 import setuptools
 
-VERSION = "0.2.9"
+VERSION = "0.3.1"
 
 # read the contents of your README file
 from os import path
