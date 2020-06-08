@@ -325,7 +325,10 @@ class SciBiteAIClient():
 			raise Exception('You must specify an address for the SciBite.ai server')
 		else:
 			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
+		if not termite_addr:
+			termite_addr = self.termite_credentials['termite_addr']
+			termite_user = self.termite_credentials['termite_user']
+			termite_pass = self.termite_credentials['termite_pass']
 		if not self.models:
 			self.populate_models_dict()
 
@@ -389,7 +392,10 @@ class SciBiteAIClient():
 			raise Exception('You must specify an address for the SciBite.ai server')
 		else:
 			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
+		if not termite_addr:
+			termite_addr = self.termite_credentials['termite_addr']
+			termite_user = self.termite_credentials['termite_user']
+			termite_pass = self.termite_credentials['termite_pass']
 		if not self.models:
 			self.populate_models_dict()
 
@@ -451,7 +457,7 @@ class SciBiteAIClient():
 	###
 
 
-	def ner_from_sent(self, models, sent, format_='scinapse', hits_only=True, scibite_ai_addr=None,
+	def ner_from_sent(self, models, sent, format_='scibite', hits_only=True, scibite_ai_addr=None,
 		scibite_ai_user=None, scibite_ai_pass=None):
 		'''
 		Pass a sentence within which you would like to identify examples of entities of specific
@@ -509,7 +515,7 @@ class SciBiteAIClient():
 		return j
 
 
-	def ner_from_doc(self, models, document, format_='scinapse', hits_only=True, 
+	def ner_from_doc(self, models, document, format_='scibite', hits_only=True, 
 		scibite_ai_addr=None, scibite_ai_user=None, scibite_ai_pass=None):
 		'''
 		Pass a document within which you would like to identify examples of entities of specific
