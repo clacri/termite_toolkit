@@ -51,7 +51,7 @@ class DocStoreRequestBuilder():
         """
         self.url = url
 
-    def get_dcc_docs(self, entity_list, source, options_dict):
+    def get_dcc_docs(self, entity_list, source='*', options_dict=None):
         """
         Retrieve document co-occurrence of provided entities
         :param entity_list: list of entities to be searched for
@@ -81,12 +81,12 @@ class DocStoreRequestBuilder():
         except:
             pass
 
-        response = requests.get(query_url, params=options, verify=False)
+        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
         resp_json = response.json()
 
         return resp_json
 
-    def get_boolean_docs(self, query_string, source, options_dict):
+    def get_boolean_docs(self, query_string, source='*', options_dict=None):
         """
         Retrieve document co-occurrence of provided entities
         :param query_string: query to be completed
@@ -116,12 +116,12 @@ class DocStoreRequestBuilder():
         except:
             pass
 
-        response = requests.get(query_url, params=options, verify=False)
+        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
         resp_json = response.json()
 
         return resp_json
 
-    def get_scc_docs(self, entity_list, source, options_dict):
+    def get_scc_docs(self, entity_list, source='*', options_dict=None):
         """
         Retrieve sentence co-occurrence of provided entities
         :param entity_list: list of entities to be searched for
@@ -151,7 +151,7 @@ class DocStoreRequestBuilder():
         except:
             pass
 
-        response = requests.get(query_url, params=options, verify=False)  # May need to add authentication details here
+        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
         resp_json = response.json()
 
         return resp_json
