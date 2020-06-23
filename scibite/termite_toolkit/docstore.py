@@ -155,6 +155,16 @@ class DocStoreRequestBuilder():
         resp_json = response.json()
 
         return resp_json
+    def get_doc_by_id(self,doc_id, fmt='json'):
+        """Retrieves document by its unique ID"""
+        options = {"fmt": fmt,
+                   "uid":doc_id}
+        base_url = self.url
+        query_url = (base_url) + "/api/ds/v1/lookup/doc"
+        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+        resp_json = response.json()
+    
+        return resp_json
 
 
 def get_docstore_dcc_df(json):
@@ -231,3 +241,5 @@ def get_docstore_scc_df(json):
 
     scc_df = pd.DataFrame(df_rows, columns=["document_id", "document_date", "scc_sentence"])
     return (scc_df)
+
+
