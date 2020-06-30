@@ -879,7 +879,15 @@ def get_hits(termiteTags, hierarchy=None, vocabs=None):
 			if hit['entityType'] not in vocabs:
 				continue
 
-		hitLocs, subsumeStates = hit['exact_array'], hit['subsume']
+		if 'fls' in hit['exact_array'][0]: #TERMite 6.3...
+			hitLocs, subsumeStates = hit['exact_array'], hit['subsume']
+		else: #TERMite 6.4...
+			hitLocs = []
+			subsumeStates = []
+			for hit_array in hit['exact_array']:
+				hitLocs.append({'fls': [hit_array['sentence'], hit_array['start'], hit_array['end']]})
+				subsumeStates.append(hit_array['subsumed'])
+
 		assert len(hitLocs) == len(subsumeStates)
 
 		for idx, hitLoc in enumerate(hitLocs):
