@@ -24,7 +24,7 @@ class DocStoreRequestBuilder():
     """
 
     def __init__(self):
-        self.url = "https://tyrion.scibite.com:9999"
+        self.url = ""
         self.input_file_path = ''
         self.payload = {"output": "json"}
         self.options = {}
@@ -46,13 +46,14 @@ class DocStoreRequestBuilder():
 
     def set_url(self, url):
         """
-        Set the URL of the DOCStore instance e.g. for local instance http://localhost:9090/termite
+        Set the URL of the DOCStore instance
         :param url: the URL of the DOCStore instance to be hit
         """
         self.url = url
 
     def get_dcc_docs(self, entity_list, source='*', options_dict=None):
         """
+        - Document co-occurrence - 
         Retrieve document co-occurrence of provided entities
         :param entity_list: list of entities to be searched for
         :param source: name of data source(s) to be searched against
@@ -82,13 +83,16 @@ class DocStoreRequestBuilder():
             pass
 
         response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+
         resp_json = response.json()
+        
 
         return resp_json
 
     def get_boolean_docs(self, query_string, source='*', options_dict=None):
         """
-        Retrieve document co-occurrence of provided entities
+        - Document-level query of Doc Store - 
+        Document-level query of Doc Store, produced both hit and facet data
         :param query_string: query to be completed
         :param source: name of data source(s) to be searched against
         :param options_dict: search parameters
@@ -96,7 +100,6 @@ class DocStoreRequestBuilder():
         """
         base_url = self.url
         query_url = (base_url) + "/api/ds/v1/search/document/{}/*/*/*".format(source)
-
         options = {"fmt": "json",
                    "fields": "*",
                    "query": query_string,
@@ -121,9 +124,44 @@ class DocStoreRequestBuilder():
 
         return resp_json
 
+    def get_docs(self, query_string, source='*', options_dict=None):
+        """
+        - Document-level query of Doc Store, returning only the documents hit, 
+        no facet data. -
+        The output is TERMite/TEXpress ready
+        :param query_string: query to be completed
+        :param source: name of data source(s) to be searched against
+        :param options_dict: search parameters
+        :return: results of search in json format
+        """
+        base_url = self.url
+        query_url = (base_url) + '/api/ds/v1/search/document/docs/*/*/*/*'.format(source)  
+        options = {"fields": "*",
+                   "fmt":"json",
+                   "query": query_string,
+                   "limit": "10",
+                   "from": "0",
+                   "sortby": "document_date:desc",
+                   "filters": "",
+                   "zip":"false",
+                   "metaonly":"false"
+                   }
+
+        try:
+            for k, v in options_dict.items():
+                if k in options.keys():
+                    options[k] = v
+        except:
+            pass
+
+        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+        resp_json = response.json()
+        return resp_json
+
     def get_scc_docs(self, entity_list, source='*', options_dict=None):
         """
-        Retrieve sentence co-occurrence of provided entities
+        - Sentence co-occurrence on entity ids or types, returns documents 
+        containing sentences fulfilling the co-occurrence. - 
         :param entity_list: list of entities to be searched for
         :param source: name of data source(s) to be searched against
         :param options_dict: search parameters
@@ -155,6 +193,7 @@ class DocStoreRequestBuilder():
         resp_json = response.json()
 
         return resp_json
+    
     def get_doc_by_id(self,doc_id, fmt='json'):
         """Retrieves document by its unique ID"""
         options = {"fmt": fmt,
@@ -163,7 +202,6 @@ class DocStoreRequestBuilder():
         query_url = (base_url) + "/api/ds/v1/lookup/doc"
         response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
         resp_json = response.json()
-    
         return resp_json
 
 
@@ -205,8 +243,11 @@ def get_docstore_dcc_df(json):
             pass
 
         # Citation
-        citation = h["citation"]
-
+        citation = ""
+        try:
+            citation = h["citation"]
+        except:
+            pass
         hit_dict.update([("document_id", doc_id), ("document_date", doc_date), ("title", title),
                          ("authors", authors), ("citation", citation)])
         df_rows.append(hit_dict)
@@ -224,7 +265,7 @@ def get_docstore_scc_df(json):
     df_rows = []
     hits = json["hits"]
 
-    for h in df_rows:
+    for h in hits:
         hit_dict = {}
 
         # Document id

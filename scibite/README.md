@@ -1,6 +1,6 @@
 ### Project Description
 
-Python library for making calls to [SciBite](https://www.scibite.com/)'s NER engine, TERMite, as well as the TExpress module for defining more complex semantic patterns.
+Python library for making calls to [SciBite](https://www.scibite.com/)'s TERMite, TExpress and DOCstore
 The library also enables post-processing of the JSON returned from such requests.
 
 ## Install
@@ -8,6 +8,7 @@ The library also enables post-processing of the JSON returned from such requests
 ```
 $ pip3 install termite_toolkit
 ```
+Versions listed on [PyPi](https://pypi.org/project/termite-toolkit/)!
 
 ## Example call to TERMite
 
@@ -66,6 +67,24 @@ t.set_pattern(pattern)
 # execute the request
 texpress_response = t.execute(display_request=True)
 pprint(texpress_response)
+```
+
+## Example call to DOCstore
+
+```python
+from termite_toolkit import docstore
+
+# Document co-occurrence of a list of entities
+docs = docstore.DocStoreRequestBuilder()
+# specify docstore API endpoint and add authentication if necessary
+docs.set_url('docstore_address')
+docs.set_basic_auth(username='user', password='pw')
+# make call to DOCStore
+docs_json = docs.get_dcc_docs(['id:GENE$HTT', 'id:GENE$EGFR'], '*', {})
+# convert json to df
+df = docstore.get_docstore_dcc_df(docs_json)
+# print titles of hits
+print(df['title'])
 ```
 
 ## License 
