@@ -18,23 +18,56 @@ __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 
 from termite_toolkit import docstore
 
+# replace with a docstore instance
+docstore_url = ''
+# fill with login details if required
+user = 'user'
+pw= 'pw'
+
+#######
+# Document-level query of Doc Store
+docs = docstore.DocStoreRequestBuilder()
+# specify docstore API endpoint and add authentication if necessary
+docs.set_url(docstore_url)
+docs.set_basic_auth(username=user, password=pw)
+# make call to DOCStore Document-level query API
+docs_json = docs.get_docs(['id:GENE$HTT', 'id:GENE$EGFR'])
+# print unique id of the first hit
+uid = docs_json['hits'][0]['uid']
+print (uid)
+
+#######
+# Retrieve document by id
+docs = docstore.DocStoreRequestBuilder()
+# specify docstore API endpoint and add authentication if necessary
+docs.set_url(docstore_url)
+docs.set_basic_auth(username=user, password=pw)
+# make call to document lookup by ID API (using the uid of the previous query)
+docs_jon = docs.get_doc_by_id(uid)
+# print the authors of the document hit
+print (docs_json['hits'][0]['authors'])
 
 #######
 # Document co-occurrence of a list of entities
 docs = docstore.DocStoreRequestBuilder()
-# make call to DOCStore
-docs_json = docs.get_dcc_docs(['id:GENE$HTT', 'id:GENE$EGFR'], '*', {})
+# specify docstore API endpoint and add authentication if necessary
+docs.set_url(docstore_url)
+docs.set_basic_auth(username=user, password=pw)
+# make call to DOCStore Document co-occurence API
+docs_json = docs.get_dcc_docs(['id:GENE$HTT', 'id:GENE$EGFR'])
 # convert json to df
 df = docstore.get_docstore_dcc_df(docs_json)
 # print titles of hits
 print(df['title'])
 
-
 #######
 # Sentence co-occurrence of a list of entities
 docs = docstore.DocStoreRequestBuilder()
-# make call to DOCStore
-docs_json = docs.get_scc_docs(['id:GENE$HTT', 'id:GENE$EGFR'], '*', {})
+# specify docstore API endpoint and add authentication if necessary
+docs.set_url(docstore_url)
+docs.set_basic_auth(username=user, password=pw)
+# make call to DOCStore sentence co-occurence API
+docs_json = docs.get_scc_docs(['id:GENE$HTT', 'id:GENE$EGFR'])
 # convert json to df
 df = docstore.get_docstore_scc_df(docs_json)
 # print doc_ids of hits
