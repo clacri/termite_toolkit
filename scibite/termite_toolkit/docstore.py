@@ -10,7 +10,7 @@ Preprocessing functions- using your TERMite output to make AI-ready data
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.3'
+__version__ = '0.3.5'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -49,7 +49,7 @@ class DocStoreRequestBuilder():
         Set the URL of the DOCStore instance
         :param url: the URL of the DOCStore instance to be hit
         """
-        self.url = url
+        self.url = url.rstrip('/')
 
     def get_dcc_docs(self, entity_list, source='*', options_dict=None):
         """
@@ -203,6 +203,16 @@ class DocStoreRequestBuilder():
         response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
         resp_json = response.json()
         return resp_json
+    
+    def entity_lookup_id(self, syn, entity_type, options_dict=None):
+        """Lookup IDs for a synonym and type"""
+        options = {"syn": syn,
+                   "type":entity_type}
+        base_url = self.url
+        query_url = (base_url) + "/api/entity/v1/lookup/id"
+        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+        resp_json = response.json()
+        return resp_json
 
 
 def get_docstore_dcc_df(json):
@@ -221,10 +231,13 @@ def get_docstore_dcc_df(json):
         doc_id = h["id"]
 
         # Document date
-        doc_date = (h["documentDate"])[0:10]
-
+        doc_date = ""
+        try:
+            doc_date = h["documentDate"][0:10]
+        except:
+            pass
         # Title
-        highlighted_sections = (h['highlightedSections'])[0]
+        highlighted_sections = h['highlightedSections'][0]
         title_words = highlighted_sections['titleWords']
 
         title_list = []
@@ -272,7 +285,11 @@ def get_docstore_scc_df(json):
         doc_id = h["docId"]
 
         # Document date
-        doc_date = (h["docDate"])[0:10]
+        doc_date = ""
+        try:
+            doc_date = h["docDate"][0:10]
+        except:
+            pass
 
         # SCC Sentence
         doc_sent = h["sentence"]

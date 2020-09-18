@@ -40,6 +40,7 @@ t.set_options({'fragmentSize': 20})
 
 # execute the request
 result = t.execute(display_request=True)
+
 # post-preocess
 filtered_hits = texpress.get_entity_hits_from_json(result)
 

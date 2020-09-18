@@ -52,6 +52,6 @@ print(list(termite_dataframe.columns))
 print(termite.entity_freq(termite_multidoc_docjsonx))
 
 # get a list of all the most frequently hit entities
-top_hits = termite.top_hits_df(termite_multidoc_docjsonx, entitySubset='GENE,MPATH, SBIO', selection=5,
-                               includeDocs=True)
+top_hits = termite.top_hits_df(termite_multidoc_docjsonx, entity_subset='GENE,MPATH, SBIO', selection=5,
+                               include_docs=True)
 print(top_hits)

@@ -21,11 +21,11 @@ from pprint import pprint
 
 input_file = "fuzzy_sample.txt"
 termite_home = "http://localhost:9090/termite"
-entities = "INDICATION,HUCELL,GENE,DRUG"
+entities = "INDICATION,CELLTYP,GENE,DRUG"
 
 # build the request
 t = termite.TermiteRequestBuilder()
-t.set_input_format("csv")
+t.set_input_format("txt")
 t.set_url(termite_home)
 t.set_binary_content(input_file)
 t.set_subsume(True)
