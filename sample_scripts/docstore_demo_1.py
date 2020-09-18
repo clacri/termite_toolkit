@@ -19,10 +19,10 @@ __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 from termite_toolkit import docstore
 
 # replace with a docstore instance
-docstore_url = ''
+docstore_url = 'https://datascience.scibite.com:9090/'
 # fill with login details if required
-user = 'user'
-pw= 'pw'
+user = 'scibite_admin'
+pw= 'weP3vw4ho9ihJka'
 
 #######
 # Document-level query of Doc Store
@@ -72,3 +72,15 @@ docs_json = docs.get_scc_docs(['id:GENE$HTT', 'id:GENE$EGFR'])
 df = docstore.get_docstore_scc_df(docs_json)
 # print doc_ids of hits
 print(df['document_id'])
+
+
+#######
+# Lookup entity synonyms
+docs = docstore.DocStoreRequestBuilder()
+# specify docstore API endpoint and add authentication if necessary
+docs.set_url(docstore_url)
+docs.set_basic_auth(username=user, password=pw)
+# returns json with list of synonyms and their IDs
+synonym = 'BRCA1'
+entity_type = 'GENE'
+print(docs.entity_lookup_id(synonym,entity_type))

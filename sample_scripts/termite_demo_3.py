@@ -24,19 +24,19 @@ termite_home = "http://localhost:9090/termite"
 input_file = "medline_sample.zip"
 
 # running a file through termite
-options = {"format": "medline.xml", "output": "json", "entities": "HUCELL"}
+options = {"format": "medline.xml", "output": "json", "entities": "DRUG,GENE"}
 termite_json_response = termite.annotate_files(termite_home, input_file, options)
-entity_hits = termite.get_entity_hits_from_json(termite_json_response, "HUCELL", score_cutoff=2)
+entity_hits = termite.get_entity_hits_from_json(termite_json_response, "DRUG,GENE", score_cutoff=2)
 pprint(entity_hits)
 
 # running a list of strings through termite one at a time and post-processing response
 text_list = [
     "sildenafil is a drug. sildenafil is a drug. sildenafil is a drug. sildenafil is a drug. sildenafil is a drug",
     "macrophage colony stimulating factor"]
-options = {"format": "txt", "output": "json", "entities": "DRUG,GENE,HUCELL"}
+options = {"format": "txt", "output": "json", "entities": "DRUG,GENE"}
 
 for i, text in enumerate(text_list):
     termite_json_response = termite.annotate_text(termite_home, text, options)
-    entity_hits = termite.get_entity_hits_from_json(termite_json_response, "DRUG,GENE,HUCELL")
+    entity_hits = termite.get_entity_hits_from_json(termite_json_response, "DRUG,GENE")
     print("row_" + str(i), ":", entity_hits)
 

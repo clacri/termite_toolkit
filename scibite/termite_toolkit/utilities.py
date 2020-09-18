@@ -12,7 +12,7 @@ Utility functions- including autocomplete
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.2'
+__version__ = '0.3.5'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -35,7 +35,7 @@ class UtilitiesRequestBuilder():
 
         :param url: the URL of the TERMite instance to be hit
         """
-        self.url = url
+        self.url = url.rstrip('/')
 
     def set_basic_auth(self, username='', password='', verification=True):
         """

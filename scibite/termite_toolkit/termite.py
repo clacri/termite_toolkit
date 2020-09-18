@@ -12,7 +12,7 @@ TERMiteRequestBuilder- make requests to the TERMite API and process results.
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.2'
+__version__ = '0.3.5'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -54,7 +54,7 @@ class TermiteRequestBuilder():
 
         :param url: the URL of the TERMite instance to be hit
         """
-        self.url = url
+        self.url = url.rstrip('/')
 
     def set_binary_content(self, input_file_path):
         """
@@ -199,8 +199,11 @@ class TermiteRequestBuilder():
                 "Failed with the following error {}\n\nPlease check that TERMite can be accessed via the following URL {}\nAnd that the necessary credentials have been provided (done so using the set_basic_auth() function)".format(
                     e, self.url))
 
-        if "json" in self.payload["output"] and not return_text:
-            return response.json()
+        if self.payload["output"] in ["json", "doc.json", "doc.jsonx"] and not return_text:
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise Exception(response.json()['RESP_META']['ERR_TRACE'])
         else:
             return response.text
 
@@ -482,9 +485,7 @@ def get_entity_hits_from_docjsonx(termite_response, filter_entity_types):
 def termite_entity_hits_df(termite_response, filter_entity_types):
     """
     Parses TERmite json or docjson(x) response and returns a summary of the hits where each column 
-    corresponds to an entity or its ID. The table entries are strings
-    containing the list of entities separated by the | delimiter.
-    
+    corresponds to an entity or its ID.
     :param termite_response: doc.JSONx TERMite response
     :param filter_entity_types: comma separated list of entities to be annotated
     :return: pandas dataframe
@@ -493,15 +494,21 @@ def termite_entity_hits_df(termite_response, filter_entity_types):
 
 
     #Magic formula that adds vocab ID header right after each vocab
-    entitieswid = [*sum(zip(filter_entity_types,[entity_type+'_ID' for entity_type in filter_entity_types]),())]
-    #Initialise dictionary of lists to be added to the dataframe later on
-    dic = {header: [] for header in entitieswid}
-    #Populate dictionary with relevant entity hits
+    entitieswid = ['docID',*sum(zip(filter_entity_types,[entity_type+'_ID' for entity_type in filter_entity_types]),())]
+    #Initiate empty list that will be populated with one dictionary/row
+    df_list=[]
+
+    #Loop through hits
     for hit in payload:
-        dic['docID']=hit['docID']
-        dic[hit['entityType']]+=hit['name']
-        dic[hit['entityType']+'_ID']+=hit['hitID']
-    df = pd.DataFrame.from_dict(dic)
+        #Populate dictionary with relevant entity hits
+        dic = {header: '' for header in entitieswid}
+        if hit['entityType'] in filter_entity_types: 
+            dic['docID']=hit['docID']
+            dic[hit['entityType']]=hit['name']
+            dic[hit['entityType']+'_ID']=hit['hitID']
+            df_list+=[dic]
+
+    df = pd.DataFrame(df_list, columns = entitieswid)
     return df
 
 def all_entities(termite_response):

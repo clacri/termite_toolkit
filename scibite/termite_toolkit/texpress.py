@@ -12,7 +12,7 @@ TExpressRequestBuilder- make requests to the TExpress API and process results.
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.2'
+__version__ = '0.3.5'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -53,7 +53,7 @@ class TexpressRequestBuilder():
 
         :param url: the URL of the TERMite instance to be hit
         """
-        self.url = url
+        self.url = url.rstrip('/')
 
     def set_binary_content(self, input_file_path):
         """
@@ -188,7 +188,10 @@ class TexpressRequestBuilder():
                     e, self.url))
 
         if self.payload["output"] in ["json", "doc.json", "doc.jsonx"] and not return_text:
-            return response.json()
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise Exception(response.json()['RESP_META']['ERR_TRACE'])
         else:
             return response.text
 
