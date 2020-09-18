@@ -19,10 +19,10 @@ __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 from termite_toolkit import docstore
 
 # replace with a docstore instance
-docstore_url = 'https://datascience.scibite.com:9090/'
+docstore_url = 'https://example.docstore.com:port'
 # fill with login details if required
-user = 'scibite_admin'
-pw= 'weP3vw4ho9ihJka'
+user = 'user'
+pw= 'pw'
 
 #######
 # Document-level query of Doc Store
