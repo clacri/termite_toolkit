@@ -190,7 +190,6 @@ class DocStoreRequestBuilder():
             pass
 
         response = requests.get(query_url, params=options, auth=self.basic_auth)
-        print (response.url)
         resp_json = response.json()
 
         return resp_json
