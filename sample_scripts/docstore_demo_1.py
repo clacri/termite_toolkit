@@ -21,8 +21,8 @@ from termite_toolkit import docstore
 # replace with a docstore instance
 docstore_url = 'https://datascience.scibite.com:9090'
 # fill with login details if required
-user = ''
-pw= ''
+user = 'user'
+pw= 'pw'
 
 #######
 # Document-level query of Doc Store
