@@ -82,7 +82,7 @@ class DocStoreRequestBuilder():
         except:
             pass
 
-        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+        response = requests.get(query_url, params=options, auth=self.basic_auth)
 
         resp_json = response.json()
         
@@ -119,7 +119,7 @@ class DocStoreRequestBuilder():
         except:
             pass
 
-        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+        response = requests.get(query_url, params=options, auth=self.basic_auth)
         resp_json = response.json()
 
         return resp_json
@@ -135,7 +135,7 @@ class DocStoreRequestBuilder():
         :return: results of search in json format
         """
         base_url = self.url
-        query_url = (base_url) + '/api/ds/v1/search/document/docs/*/*/*/*'.format(source)  
+        query_url = (base_url) + '/api/ds/v1/search/document/docs/{}/*/*/*'.format(source)  
         options = {"fields": "*",
                    "fmt":"json",
                    "query": query_string,
@@ -154,7 +154,7 @@ class DocStoreRequestBuilder():
         except:
             pass
 
-        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+        response = requests.get(query_url, params=options, auth=self.basic_auth)
         resp_json = response.json()
         return resp_json
 
@@ -189,7 +189,8 @@ class DocStoreRequestBuilder():
         except:
             pass
 
-        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+        response = requests.get(query_url, params=options, auth=self.basic_auth)
+        print (response.url)
         resp_json = response.json()
 
         return resp_json
@@ -200,7 +201,7 @@ class DocStoreRequestBuilder():
                    "uid":doc_id}
         base_url = self.url
         query_url = (base_url) + "/api/ds/v1/lookup/doc"
-        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+        response = requests.get(query_url, params=options, auth=self.basic_auth)
         resp_json = response.json()
         return resp_json
     
@@ -210,10 +211,32 @@ class DocStoreRequestBuilder():
                    "type":entity_type}
         base_url = self.url
         query_url = (base_url) + "/api/entity/v1/lookup/id"
-        response = requests.get(query_url, params=options, auth=self.basic_auth, verify=False)
+        response = requests.get(query_url, params=options, auth=self.basic_auth)
         resp_json = response.json()
         return resp_json
-
+    def get_facets_only(self,query_string,facetFilter, source ='*', significantTerms = False, options_dict = None):
+        """Document-level query of Doc Store, returning only the facets"""
+        options ={"fmt": "json",
+                   "fields": "*",
+                   "query": query_string,
+                   "facetFilter":facetFilter,
+                   "limit": "10",
+                   "from": "0",
+                   "facettype": "BY_TYPE",
+                   "significantTerms": "false",
+                   "excludehits": "false",
+                   }
+        try:
+            for k, v in options_dict.items():
+                if k in options.keys():
+                    options[k] = v
+        except:
+            pass
+        base_url = self.url
+        query_url = (base_url) + '/api/ds/v1/search/document/facets/{}/*/*/*'.format(source)  
+        response = requests.get(query_url, params=options, auth=self.basic_auth)
+        resp_json = response.json()
+        return resp_json
 
 def get_docstore_dcc_df(json):
     """
