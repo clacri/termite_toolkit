@@ -1008,7 +1008,7 @@ def markup(docjsonx, normalisation='id', substitute=True, wrap=False,
 
 def text_markup(text, termiteAddr='http://localhost:9090/termite', vocabs=['GENE', 'INDICATION', 'DRUG'],
 				normalisation='id', wrap=False, wrapChars=('{!', '!}'), substitute=True, replacementDict=None,
-				termite_http_user=None, termite_http_pass=None):
+				termite_http_user=None, termite_http_pass=None, include_json=False):
 	'''
 	Receives plain text, returns text with TERMited substitutions.
 
@@ -1035,8 +1035,14 @@ def text_markup(text, termiteAddr='http://localhost:9090/termite', vocabs=['GENE
 		t.set_basic_auth(termite_http_user, termite_http_pass, verification=False)
 	docjsonx = t.execute()
 
-	return markup(docjsonx, vocabs=vocabs, normalisation=normalisation, wrap=wrap,
-				  wrapChars=wrapChars, substitute=substitute, replacementDict=replacementDict)[0]['termited_text']
+	if include_json:
+		return markup(docjsonx, vocabs=vocabs, normalisation=normalisation, wrap=wrap,
+					  wrapChars=wrapChars, substitute=substitute, 
+					  replacementDict=replacementDict)[0]['termited_text'], docjsonx
+	else:
+		return markup(docjsonx, vocabs=vocabs, normalisation=normalisation, wrap=wrap,
+					  wrapChars=wrapChars, substitute=substitute, 
+					  replacementDict=replacementDict)[0]['termited_text']
 
 
 def label(docjsonx, vocabs, labelLevel='word'):
