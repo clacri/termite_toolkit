@@ -83,10 +83,8 @@ class TermiteRequestBuilder():
         df_dict = dataframe.to_dict()
         termite_input = []
         for row in df_dict:
-            print(row)
             dic = {"sections":[], "uid":"Row_"+str(row)}
             for column in df_dict[row]:
-                print (column, df_dict[row][column])
                 mini_dic = {"body":df_dict[row][column], "header":"", "partName":column}
                 dic["sections"]+=[mini_dic]
             termite_input+=[dic]
