@@ -12,13 +12,14 @@ TERMiteRequestBuilder- make requests to the TERMite API and process results.
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.3.7'
+__version__ = '0.3.8'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
 import requests
 import os
 import pandas as pd
+import json
 
 
 class TermiteRequestBuilder():
@@ -74,6 +75,23 @@ class TermiteRequestBuilder():
         :param string: text to be sent to TERMite
         """
         self.payload["text"] = string
+    
+    def set_df(self,dataframe):
+        """Use this for tagging pandas dataframes"""
+        
+        dataframe = dataframe.T
+        df_dict = dataframe.to_dict()
+        termite_input = []
+        for row in df_dict:
+            print(row)
+            dic = {"sections":[], "uid":"Row_"+str(row)}
+            for column in df_dict[row]:
+                print (column, df_dict[row][column])
+                mini_dic = {"body":df_dict[row][column], "header":"", "partName":column}
+                dic["sections"]+=[mini_dic]
+            termite_input+=[dic]
+        self.payload["text"] = json.dumps(termite_input)
+        self.payload["format"] = "jsonc"
 
     def set_options(self, options_dict):
         """
@@ -174,6 +192,8 @@ class TermiteRequestBuilder():
         """
         input = bool_to_string(bool)
         self.payload["noEmpty"] = input
+        
+
 
     def execute(self, display_request=False, return_text=False):
         """
