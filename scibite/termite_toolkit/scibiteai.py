@@ -18,6 +18,7 @@ __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 
 
 import json
+import os
 import requests
 import nltk.data
 from requests.auth import HTTPBasicAuth
@@ -158,11 +159,14 @@ class SciBiteAIClient():
 			req = '/api/models'
 
 		if not scibite_ai_user:
+			print ('http://' + scibite_ai_addr + req)
 			r = requests.get('http://' + scibite_ai_addr + req)
+
 		else:
 			print('Shouldnt get here...')
 			r = requests.get('https://' + scibite_ai_addr + req, 
 				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
+
 
 		j = json.loads(r.text)
 
@@ -302,7 +306,7 @@ class SciBiteAIClient():
 
 
 	def relex_from_sent(self, model, sent, scibite_ai_addr=None, scibite_ai_user=None, 
-		scibite_ai_pass=None, termite_addr=None, termite_user=None, termite_pass=None):
+		scibite_ai_pass=None, termite_addr=None, termite_user=None, termite_pass=None, split_paragraphs = 'false'):
 		'''
 		Pass a sentence within which you would like to identify a relationship using a specific 
 		model.
@@ -336,15 +340,15 @@ class SciBiteAIClient():
 			self.load_model('relex', model)
 
 		if scibite_ai_addr.endswith('/api'):
-			req = '/relex/predict_sentence'
+			req = '/relex/predict_sentences'
 		elif scibite_ai_addr.endswith('/relex'):
-			req = '/predict_sentence'
-		elif scibite_ai_addr.endswith('/predict_sentence'):
+			req = '/predict_sentences'
+		elif scibite_ai_addr.endswith('/predict_sentences'):
 			req = ''
 		else:
-			req = '/api/relex/predict_sentence'
+			req = '/api/relex/predict_sentences'
 
-		data = {'model': model, 'sentence': sent}
+		data = {'model': model, 'sentences': sent, 'split_paragraphs' :split_paragraphs}
 
 		if termite_addr:
 			data['termite_url'] = termite_addr
@@ -353,11 +357,10 @@ class SciBiteAIClient():
 			data['termite_http_pass'] = termite_pass
 
 		if not scibite_ai_user:
-			r = requests.get('http://' + scibite_ai_addr + req, data=data)
+			r = requests.get('http://' + scibite_ai_addr + req, params=data)
 		else:
-			r = requests.get('https://' + scibite_ai_addr + req, data=data, 
+			r = requests.get('https://' + scibite_ai_addr + req, params=data, 
 				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
 		j = json.loads(r.text)['results']
 		j['sentence'] = sent
 
@@ -425,7 +428,7 @@ class SciBiteAIClient():
 				'termite_pass': termite_pass}
 			else:
 				data = {'binary': binary, 'format': doctype}
-
+			
 			r = requests.post(termite_addr+'/toolkit/docxsent.api', data=data)
 			j = r.json()
 			for sent in j['sentences'][0]:
@@ -438,16 +441,16 @@ class SciBiteAIClient():
 
 		results = []
 
-		for sent in sentences:
-			pred = relex_from_sent(model, sent, scibite_ai_addr=scibite_ai_addr, 
+		for sent in sents:
+			pred = self.relex_from_sent(model, sent, scibite_ai_addr=scibite_ai_addr, 
 				scibite_ai_user=scibite_ai_user, scibite_ai_pass=scibite_ai_pass, 
 				termite_addr=termite_addr, termite_user=termite_user, termite_pass=termite_pass)
 
 			if pred:
-				results.append(sent)
+				results.append(pred)
 			else:
 				if return_negatives:
-					results.append(sent)
+					results.append(pred)
 
 		return results
 
@@ -494,13 +497,13 @@ class SciBiteAIClient():
 		models = ','.join(models)
 
 		if scibite_ai_addr.endswith('/api'):
-			req = '/ner/predict_sentence'
+			req = '/ner/predict_sentences'
 		elif scibite_ai_addr.endswith('/ner'):
-			req = '/predict_sentence'
-		elif scibite_ai_addr.endswith('/predict_sentence'):
+			req = '/predict_sentences'
+		elif scibite_ai_addr.endswith('/predict_sentences'):
 			req = ''
 		else:
-			req = '/api/ner/predict_sentence'
+			req = '/api/ner/predict_sentences'
 
 		data = {'model': models, 'sentence': sent, 'hits_only': hits_only, 'format': format_}
 
