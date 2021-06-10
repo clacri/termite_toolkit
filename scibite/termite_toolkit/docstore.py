@@ -10,7 +10,7 @@ Preprocessing functions- using your TERMite output to make AI-ready data
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.3.7'
+__version__ = '0.4.0'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
