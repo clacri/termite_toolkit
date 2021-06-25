@@ -12,7 +12,7 @@ TExpressRequestBuilder- make requests to the TExpress API and process results.
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -20,6 +20,7 @@ import requests
 import os
 import pandas as pd
 import json
+import base64
 
 
 class TexpressRequestBuilder():
@@ -46,6 +47,22 @@ class TexpressRequestBuilder():
         :param verification: if set to False requests will ignore verifying the SSL certificate, can also pass the path to a certfile
         """
         self.basic_auth = (username, password)
+        self.verify_request = verification
+        
+    def set_oauth2(self, token_user, token_pw, verification = True):
+        """Pass username and password for the Elsevier token api
+        It then uses these credentials to generate an access token and adds 
+        this to the request header.
+        :token_user: username to access Elsevier token api. Specific to the hosting website
+        :token_pw:   password to access Elsevier token api. Specific to the hosting website
+        """
+        auth64 = base64.b64encode(bytearray(token_user+":"+token_pw,'utf8')) #base64 encoded Username+password
+        auth64 = auth64.decode ('utf8')
+        token_address = "https://api.healthcare.elsevier.com:443/token"
+        req = requests.post(token_address, data= {"grant_type": "client_credentials"}, 
+            headers = {"Authorization": "Basic "+ auth64, "Content-Type": "application/x-www-form-urlencoded"})
+        access_token = req.json()['access_token']
+        self.headers = {"Authorization": "Bearer "+ access_token}
         self.verify_request = verification
 
     def set_url(self, url):
@@ -74,6 +91,7 @@ class TexpressRequestBuilder():
         :param string: text to be sent to TERMite
         """
         self.payload["text"] = string
+        
     def set_df(self,dataframe):
         """Use this for tagging pandas dataframes"""
         
@@ -189,12 +207,23 @@ class TexpressRequestBuilder():
             print("REQUEST: ", self.url, self.payload)
         try:
             if self.binary_content and bool(self.basic_auth):
+                #Basic authentication request for binary content
                 response = requests.post(self.url, data=self.payload, files=self.binary_content, auth=self.basic_auth,
                                          verify=self.verify_request)
-            elif self.binary_content and bool(self.basic_auth) == False:
+
+            elif self.binary_content and bool(self.basic_auth) == False and bool(self.headers):
+                #OAuth2 authentication request for binary content
+                response = requests.post(self.url, data=self.payload, files=self.binary_content, 
+                                         verify=self.verify_request, headers=self.headers)
+            elif self.binary_content and bool(self.basic_auth) == False and bool(self.headers) == False:
+                #No authentication request for binary content
                 response = requests.post(self.url, data=self.payload, files=self.binary_content)
             elif not self.binary_content and bool(self.basic_auth):
+                #Basic authentication for text content
                 response = requests.post(self.url, data=self.payload, verify=self.verify_request, auth=self.basic_auth)
+            elif not self.binary_content and bool(self.headers):
+                #OAuth2 authentication request for text content
+                response = requests.post(self.url, data=self.payload, verify=self.verify_request, headers=self.headers)
             else:
                 response = requests.post(self.url, data=self.payload)
         except Exception as e:

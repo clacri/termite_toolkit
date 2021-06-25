@@ -12,7 +12,7 @@ generate insights.
 
 
 __author__ = 'SciBite AI'
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 __copyright__ = '(c) 2020, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
