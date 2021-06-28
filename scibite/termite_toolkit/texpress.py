@@ -35,6 +35,7 @@ class TexpressRequestBuilder():
         self.options = {}
         self.binary_content = None
         self.basic_auth = ()
+        self.headers ={}
         self.verify_request = True
 
     def set_basic_auth(self, username='', password='', verification=True):
