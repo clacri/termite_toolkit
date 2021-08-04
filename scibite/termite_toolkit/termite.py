@@ -52,18 +52,19 @@ class TermiteRequestBuilder():
         self.basic_auth = (username, password)
         self.verify_request = verification
         
-    def set_oauth2(self, token_user, token_pw, verification = True):
+    def set_oauth2(self, token_user, token_pw, verification = True, token_address = "https://api.healthcare.elsevier.com:443/token"):
         """Pass username and password for the Elsevier token api
         It then uses these credentials to generate an access token and adds 
         this to the request header.
-        :token_user: username to access Elsevier token api. Specific to the hosting website
-        :token_pw:   password to access Elsevier token api. Specific to the hosting website
+        :token_user:    username to access Elsevier token api. Specific to the hosting website
+        :token_pw:      password to access Elsevier token api. Specific to the hosting website
+        :token_address: address of the token api
         """
         auth64 = base64.b64encode(bytearray(token_user+":"+token_pw,'utf8')) #base64 encoded Username+password
         auth64 = auth64.decode ('utf8')
             
         
-        token_address = "https://api.healthcare.elsevier.com:443/token"
+        token_address = token_address or "https://api.healthcare.elsevier.com:443/token"
         req = requests.post(token_address, data= {"grant_type": "client_credentials"}, 
             headers = {"Authorization": "Basic "+ auth64, "Content-Type": "application/x-www-form-urlencoded"})
         access_token = req.json()['access_token']
