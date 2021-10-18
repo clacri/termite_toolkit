@@ -79,6 +79,38 @@ class TermiteRequestBuilder():
         """
         self.url = url.rstrip('/')
 
+    def set_username (self, username):
+        """
+        Set the username for the user making the current termite request
+
+        :param username: string variable to specify the username of the user making the current termite request
+        """
+        self.payload["username"] = username
+
+    def set_usertoken (self, usertoken):
+        """
+        Set the usertoken for the user making the current termite request
+
+        :param usertoken: string variable to specify the usertoken of the user making the current termite request
+        """
+        self.payload["usertoken"] = usertoken
+
+    def set_bgjob (self, bgjob):
+        """
+        Set if a termite job should be handled ass a background process
+
+        :param bgjob: boolean variable to specify if the termite should should be done in the background
+        """
+        self.payload["bgjob"] = bgjob
+
+    def set_bginfo (self, bginfo):
+        """
+        Set any information associated with the background task
+
+        :param bginfo: string variable to specify any information about the background task
+        """
+        self.payload["bginfo"] = bginfo
+
     def set_binary_content(self, input_file_path):
         """
         For annotating file content, send file path string and process file as a binary
