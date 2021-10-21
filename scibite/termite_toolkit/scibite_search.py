@@ -12,7 +12,7 @@ SearchRequestBuilder- make requests to the Scibite Search API and process result
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.4.3'
+__version__ = '0.4.4'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -25,6 +25,7 @@ class SBSRequestBuilder():
 
     def __init__(self):
         self.url = ""
+        self.token_url =""
         self.payload = {"output": "json", "method": "texpress"}
         self.options = {}
         self.basic_auth = ()
@@ -38,8 +39,10 @@ class SBSRequestBuilder():
         :username: scibite search username
         :password: scibite search password for username above
         """
-        
-        token_address = self.url+"/auth/realms/Scibite/protocol/openid-connect/token"
+        if self.token_url !="":
+            token_address = self.token_url+"/auth/realms/Scibite/protocol/openid-connect/token"
+        else:
+            token_address = self.url+"/auth/realms/Scibite/protocol/openid-connect/token"
 		
         req = requests.post(token_address, data= {"grant_type": "password","client_id":client_id,"username":username, "password":password}, 
             headers = {"Content-Type": "application/x-www-form-urlencoded"})
@@ -47,15 +50,21 @@ class SBSRequestBuilder():
         self.headers = {"Authorization": "Bearer "+ access_token}
         self.verify_request = verification
         
+    def set_token_url(self, token_url):
+        """Set the URL for the token API
+        :token_url: the URL for the token API
+        """
+        self.token_url = token_url.rstrip('/')
+		
     def set_url(self, url):
         """
         Set the URL of the Scibite Search instance
-        :param url: the URL of the Scibite Search instance to be hit
+        :url: the URL of the Scibite Search instance to be hit
         """
         self.url = url.rstrip('/')
         
     def get_docs(self,query ='',markup=True, limit = 20,offset = 0):
-        """This endpoints allows searching and retrieval of documents. 
+        """This endpoint allows searching and retrieval of documents. 
 		:query: SSQL query
 		:markup: Whether annotated text should markup the entities
 		:offset: The number of resources to skip before returning results. Used for implementing paging.
@@ -65,4 +74,19 @@ class SBSRequestBuilder():
             options["queries"]=query
 
         req = requests.get(self.url+"/api/search/v1/documents/",params = options, headers = self.headers)
-        return req.url, req.json()
+        return req.json()
+
+    def entity_mentions (self,text):
+        """This endpoint annotates a text string with termite annotations.
+        Efectively it works as an API endpoint"""
+        options = {"text":text}
+        req = requests.get(self.url+"/jobserver/v1/entitymentions", params = options,headers = self.headers)
+        return req.json()
+
+    def document_schemas (self,json_body):
+        """This endpoint posts a new document schema to a ScibiteSearch instance"""
+        headers = self.headers
+        headers['Content-type']='application/json' 
+        requests.post(self.url+ '/api/search/v1/document-schemas', json = json_body,headers = headers)
+
+        
