@@ -1,3 +1,4 @@
+
 """
 
   ____       _ ____  _ _         _____ _____ ____  __  __ _ _         _____           _ _    _ _
@@ -12,7 +13,7 @@ SearchRequestBuilder- make requests to the Scibite Search API and process result
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.4.4'
+__version__ = '0.4.5'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -67,6 +68,7 @@ class SBSRequestBuilder():
         """This endpoint allows searching and retrieval of documents. 
 		:query: SSQL query
 		:markup: Whether annotated text should markup the entities
+		:limit: Limits the number of results
 		:offset: The number of resources to skip before returning results. Used for implementing paging.
 		"""
         options ={"markup":markup,"limit":limit, "offset":offset}
@@ -74,6 +76,20 @@ class SBSRequestBuilder():
             options["queries"]=query
 
         req = requests.get(self.url+"/api/search/v1/documents/",params = options, headers = self.headers)
+        return req.json()
+	
+    def get_sentences(self,query='',markup =True, limit =20, offset =0):
+        """This endpoint allows searching and retrieval of the sentences in the documents. 
+		:query: SSQL query
+		:markup: Whether annotated text should markup the entities\
+		:limit: Limits the number of results
+		:offset: The number of resources to skip before returning results. Used for implementing paging.
+		"""
+        options ={"markup":markup,"limit":limit, "offset":offset}
+        if query:
+            options["queries"]=query
+
+        req = requests.get(self.url+"/api/search/v1/sentences/",params = options, headers = self.headers)
         return req.json()
 
     def entity_mentions (self,text):
