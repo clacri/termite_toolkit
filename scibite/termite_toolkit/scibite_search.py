@@ -78,6 +78,17 @@ class SBSRequestBuilder():
         req = requests.get(self.url+"/api/search/v1/documents/",params = options, headers = self.headers)
         return req.json()
 	
+    def get_document(self,document_id, query='',markup = True):
+        """This endpoint retrieves a customizable view of a document
+		:document_id: the id of the document to be retrieved
+		:query: SSQL query
+		:markup: Whether annotated text should markup the entities"""
+        options ={"markup":markup}
+        if query:
+            options["queries"]=query
+        req = requests.get(self.url + "/api/search/v1/documents/"+document_id, params = options, headers = self.headers)
+        return req.json()
+	
     def get_sentences(self,query='',markup =True, limit =20, offset =0):
         """This endpoint allows searching and retrieval of the sentences in the documents. 
 		:query: SSQL query
@@ -90,6 +101,31 @@ class SBSRequestBuilder():
             options["queries"]=query
 
         req = requests.get(self.url+"/api/search/v1/sentences/",params = options, headers = self.headers)
+        return req.json()
+	
+    def get_aggregates(self,query='',vocabs = [], sentences = True, significant = False, limit = 20, offset = 0):
+        """This function hits either the document aggregates or sentence aggregates API 
+		endpoints and returns aggregate counts for the provided query
+		:query: SSQL query
+		:vocabs: list of vocabularies to select the entity counts from
+		:sentences: True for sentence aggregates, False for Document counts
+		:significant: If true it sorts by significance score, if false it sorts by count
+		:limit: Limits the number of results
+		:offset: The number of resources to skip before returing results. Used for implementing paging.
+		"""
+        options ={"limit":limit, "offset":offset, "includeVocabularies":vocabs}
+        if query:
+            options["queries"]=query
+        if sentences:
+            if significant:
+                req = requests.get(self.url+"/api/search/v1/sentence-aggregates/significant-entity",params = options, headers = self.headers)
+            else:
+                req = requests.get(self.url+"/api/search/v1/sentence-aggregates/entity",params = options, headers = self.headers)
+        else:
+            if significant:
+                req = requests.get(self.url+"/api/search/v1/document-aggregates/significant-entity",params = options, headers = self.headers)
+            else:
+                req = requests.get(self.url+"/api/search/v1/document-aggregates/entity",params = options, headers = self.headers)			
         return req.json()
 
     def entity_mentions (self,text):
