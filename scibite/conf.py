@@ -22,7 +22,7 @@ copyright = '2019, SciBite Data Science'
 author = 'SciBite Data Science Team'
 
 # The full version, including alpha/beta/rc tags
-release = '0.4.5'
+release = '0.4.6'
 
 
 # -- General configuration ---------------------------------------------------
