@@ -13,7 +13,7 @@ SearchRequestBuilder- make requests to the Scibite Search API and process result
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.4.5'
+__version__ = '0.4.6'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
