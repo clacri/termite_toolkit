@@ -12,7 +12,7 @@ generate insights.
 
 
 __author__ = 'SciBite AI'
-__version__ = '0.4.6'
+__version__ = '0.4.7'
 __copyright__ = '(c) 2020, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -21,851 +21,238 @@ import json
 import os
 import requests
 import nltk.data
-from requests.auth import HTTPBasicAuth
 import termite_toolkit.termite as termite
 
-
-scibite_ai_credentials = {
-	'scibite_ai_addr': None,
-	'scibite_ai_user': None,
-	'scibite_ai_pass': None
-	}
-
-termite_credentials = {
-	'termite_addr': None,
-	'termite_user': None,
-	'termite_pass': None
-	}
-
-docstore_credentials = {
-	'docstore_addr': None,
-	'docstore_user': None,
-	'docstore_pass': None
-	}
-
-
 class SciBiteAIClient():
-	def __init__(self, scibite_ai_credentials=scibite_ai_credentials, 
-		termite_credentials=termite_credentials, docstore_credentials=docstore_credentials):
-
-		self.scibite_ai_credentials = scibite_ai_credentials
-		self.termite_credentials = termite_credentials
-		self.docstore_credentials = docstore_credentials
+	def __init__(self):
 		self.models = None
 		self.sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
-
-		if scibite_ai_credentials['scibite_ai_addr']:
-			self.populate_models_dict()
-
+		self.scibiteai_url = ''
+		self.scibiteai_auth = ()
+		self.termite_url =''
+		self.termite_auth = ()
 
 	###
 	#Core functionality
 	###
 
-
-	def populate_models_dict(self, scibite_ai_addr=None, scibite_ai_user=None, 
-		scibite_ai_pass=None):
-		'''
-		Populate a dictionary with models, descriptions and loaded statuses
-
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
-
-		self.models = {}
-
-		typeList = self.list_model_types()['results']
-		for type_ in typeList:
-			models = self.list_models(type_)
-			self.models[type_] = models['results']
-
-
-	def set_scibite_ai_credentials(self, scibite_ai_addr, scibite_ai_user=None, 
-		scibite_ai_pass=None):
-		'''
+	def set_scibite_ai_credentials(self, scibite_ai_addr, scibite_ai_user='', 
+		scibite_ai_pass=''):
+		"""
 		Set credentials for the SciBite AI server.
 
 		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
 		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
 		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
+		"""
 
-		self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-		if scibite_ai_user:
-			scibite_ai_credentials['scibite_ai_user'] = scibite_ai_user
-		if scibite_ai_pass:
-			scibite_ai_credentials['scibite_ai_pass'] = scibite_ai_pass
+		self.scibiteai_url = scibite_ai_addr
+		self.scibiteai_auth=(scibite_ai_user,scibite_ai_pass)
 
 
-	def set_termite_credentials(self, termite_addr, termite_user=None, termite_pass=None):
-		'''
+	def set_termite_credentials(self, termite_addr, termite_user='', termite_pass=''):
+		"""
 		Set credentials for the TERMite server.
 
 		:param string termite_addr: Address for the TERMite server (e.g. 127.0.0.1:9090)
 		:param string termite_user: Username for the TERMite server http (if required)
 		:param string termite_pass: Password for the TERMite server http (if required)
-		'''
+		"""
 
-		termite_credentials['termite_addr'] = termite_addr
-		if termite_user:
-			termite_credentials['termite_user'] = termite_user
-		if termite_pass:
-			termite_credentials['termite_pass'] = termite_pass
-
-
-	def set_docstore_credentials(self, docstore_addr, docstore_user=None, docstore_pass=None):
-		'''
-		Set credentials for the DOCstore server
-
-		:param string docstore_addr: Address for the DOCstore server (e.g. 127.0.0.1:8000)
-		:param string docstore_user: Username for the DOCstore server http (if required)
-		:param string docstore_pass: Password for the DOCstore server http (if required)
-		'''
-
-		self.docstore_credentials['docstore_addr'] = docstore_addr
-		if docstore_user:
-			self.docstore_credentials['docstore_user'] = docstore_user
-		if docstore_pass:
-			self.docstore_credentials['docstore_pass'] = docstore_pass
-
+		self.termite_url = termite_addr
+		if termite_user and termite_pass:
+			self.termite_auth = (termite_user,termite_pass)
 
 	###
 	#Models functionality
 	###
 
 
-	def list_model_types(self, scibite_ai_addr=None, scibite_ai_user=None, scibite_ai_pass=None):
-		'''
+	def list_model_types(self):
+		"""
 		List the broad categories of models supported by the SciBite AI platform.
+		"""
+		req = '/models'
+		r = requests.get('http://' + self.scibiteai_url + req, auth=self.scibiteai_auth)
+		return r.json()
 
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/models'
-		else:
-			req = '/api/models'
-
-		if not scibite_ai_user:
-			print ('http://' + scibite_ai_addr + req)
-			r = requests.get('http://' + scibite_ai_addr + req)
-
-		else:
-			print('Shouldnt get here...')
-			r = requests.get('https://' + scibite_ai_addr + req, 
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
-
-		j = json.loads(r.text)
-
-		return j
-
-
-	def list_models(self, type_, scibite_ai_addr=None, scibite_ai_user=None, scibite_ai_pass=None):
-		'''
+	def list_models(self, model_type):
+		"""
 		List models of a specific type.
 		
 		:param string type_: The category of models you would like to list (e.g. 'ner')
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
+		"""
 
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
+		req = '/models/%s' % model_type
+		r = requests.get('http://' + self.scibiteai_url + req, auth=self.scibiteai_auth)
+		return r.json()
 
-		if scibite_ai_addr.endswith('/api'):
-			req = '/models/%s' % type_	
-		elif scibite_ai_addr.endswith('/models'):
-			req = '/%s' % type_	
-		elif scibite_ai_addr.endswith('/%s' % type_):
-			req = ''
-		else:
-			req = '/api/models/%s' % type_
-
-		if not scibite_ai_user:
-			r = requests.get('http://' + scibite_ai_addr + req)
-		else:
-			r = requests.get('https://' + scibite_ai_addr + req, 
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
-		j = json.loads(r.text)
-
-		return j
-
-
-	def load_model(self, type_, model, scibite_ai_addr=None, scibite_ai_user=None, 
-		scibite_ai_pass=None):
-		'''
+	def load_model(self, model_type, model):
+		"""
 		Load a specific model of a specific type.
 		
 		:param string type_: The category of the model you would like to load
 		:param string model: The specific name of the model you would like to load
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/models/%s/load' % type_
-		elif scibite_ai_addr.endswith('/models'):
-			req = '/%s/load' % type_	
-		elif scibite_ai_addr.endswith('/%s' % type_):
-			req = '/load'
-		elif scibite_ai_addr.endswith('/%s' % model):
-			req = ''
-		else:
-			req = '/api/models/%s/load' % type_
-
+		"""
+		req = '/models/%s/load' % model_type
 		data = {'model': model}
-
-		if not scibite_ai_user:
-			r = requests.post('http://' + scibite_ai_addr + req, data=data)
-		else:
-			r = requests.post('https://' + scibite_ai_addr + req, data=data,
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
-		j = json.loads(r.text)
-
-		return j
+		r = requests.post('http://'+ self.scibiteai_url + req, params=data,auth=self.scibiteai_auth)
+		return r.json()
 
 
-	def unload_model(self, type_, model, scibite_ai_addr=None, scibite_ai_user=None, 
-		scibite_ai_pass=None):
-		'''
+	def unload_model(self, model_type, model):
+		"""
 		Unload a specific model of a specific type.
 
 		:param string type_: The category of the model you would like to unload
 		:param string model: The specific name of the model you would like to unload
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/models/%s/unload' % type_
-		elif scibite_ai_addr.endswith('/models'):
-			req = '/%s/unload' % type_	
-		elif scibite_ai_addr.endswith('/%s' % type_):
-			req = '/unload'
-		elif scibite_ai_addr.endswith('/%s' % model):
-			req = ''
-		else:
-			req = '/api/models/%s/unload' % type_
-
+		"""
+		req = '/models/%s/unload' % model_type
 		data = {'model': model}
-
-		if not scibite_ai_user:
-			r = requests.post('http://' + scibite_ai_addr + req, data=data)
-		else:
-			r = requests.post('https://' + scibite_ai_addr + req, data=data,
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
-		return j
-
-
-	###
-	#RE functionality
-	###
-
-
-	def relex_from_sent(self, model, sent, scibite_ai_addr=None, scibite_ai_user=None, 
-		scibite_ai_pass=None, termite_addr=None, termite_user=None, termite_pass=None, split_paragraphs = 'false'):
-		'''
-		Pass a sentence within which you would like to identify a relationship using a specific 
-		model.
-
-		:param string model: The model trained to identify your relationship of interest
-		:param string sent: The sentence you wish to assess for your relationship of interest
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		:param string termite_addr: Address for the TERMite server (e.g. 127.0.0.1:9090)
-		:param string termite_user: Username for the TERMite server http (if required)
-		:param string termite_pass: Password for the TERMite server http (if required)
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-		if not termite_addr:
-			termite_addr = self.termite_credentials['termite_addr']
-			termite_user = self.termite_credentials['termite_user']
-			termite_pass = self.termite_credentials['termite_pass']
-		if not self.models:
-			self.populate_models_dict()
-
-		if self.models['relex'][model]['loaded'] == 'False':
-			self.load_model('relex', model)
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/relex/predict_sentences'
-		elif scibite_ai_addr.endswith('/relex'):
-			req = '/predict_sentences'
-		elif scibite_ai_addr.endswith('/predict_sentences'):
-			req = ''
-		else:
-			req = '/api/relex/predict_sentences'
-
-		data = {'model': model, 'sentences': sent, 'split_paragraphs' :split_paragraphs}
-
-		if termite_addr:
-			data['termite_url'] = termite_addr
-		if termite_user:
-			data['termite_http_user'] = termite_user
-			data['termite_http_pass'] = termite_pass
-
-		if not scibite_ai_user:
-			r = requests.get('http://' + scibite_ai_addr + req, params=data)
-		else:
-			r = requests.get('https://' + scibite_ai_addr + req, params=data, 
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-		j = json.loads(r.text)['results']
-		j['sentence'] = sent
-
-		return j
-
-
-	def relex_from_doc(self, model, document, doctype=None, scibite_ai_addr=None, 
-		scibite_ai_user=None, scibite_ai_pass=None, termite_addr=None, termite_user=None, 
-		termite_pass=None, return_negatives=False):
-		'''
-		Pass a document within which you would like to identify sentences containing relationships 
-		using a specific model.
-
-		:param string model: The model trained to identify your relationship of interest
-		:param string document: The filepath of the document you wish to search for your 
-		relationship of interest
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		:param string termite_addr: Address for the TERMite server (e.g. 127.0.0.1:9090)
-		:param string termite_user: Username for the TERMite server http (if required)
-		:param string termite_pass: Password for the TERMite server http (if required)
-		:param bool return_negatives: Set to True if you wish to have sentences with no
-		relationship identified returned with your results
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-		if not termite_addr:
-			termite_addr = self.termite_credentials['termite_addr']
-			termite_user = self.termite_credentials['termite_user']
-			termite_pass = self.termite_credentials['termite_pass']
-		if not self.models:
-			self.populate_models_dict()
-
-		if self.models['relex'][model]['loaded'] == 'False':
-			self.load_model('relex', model)
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/relex/predict_file'
-		elif scibite_ai_addr.endswith('/relex'):
-			req = '/predict_file'
-		elif scibite_ai_addr.endswith('/predict_file'):
-			req = ''
-		else:
-			req = '/api/relex/predict_file'
-
-		if not doctype:
-			doctype = document[::-1][:document[::-1].find('.')][::-1]
-
-		sents = []
-
-		if termite_addr:
-			#Call TERMite to split sentences...
-			binary = open(os.path.join(document), 'rb').read()
-
-			if termite_user:
-				data = {'binary': binary, 'format': doctype, 'termite_user': termite_user,
-				'termite_pass': termite_pass}
-			else:
-				data = {'binary': binary, 'format': doctype}
-			
-			r = requests.post(termite_addr+'/toolkit/docxsent.api', data=data)
-			j = r.json()
-			for sent in j['sentences'][0]:
-				sents.append(sent['sentence'])
-		else:
-			if doctype == 'txt':
-				sents = self.sent_detector.tokenize(open(document, 'r').read())
-			else:
-				raise Exception('TERMite is required to parse files that are not .txt format')
-
-		results = []
-
-		for sent in sents:
-			pred = self.relex_from_sent(model, sent, scibite_ai_addr=scibite_ai_addr, 
-				scibite_ai_user=scibite_ai_user, scibite_ai_pass=scibite_ai_pass, 
-				termite_addr=termite_addr, termite_user=termite_user, termite_pass=termite_pass)
-
-			if pred:
-				results.append(pred)
-			else:
-				if return_negatives:
-					results.append(pred)
-
-		return results
-
+		r = requests.post('http://'+ self.scibiteai_url + req, params=data,auth=self.scibiteai_auth)
+		return r.json()
 
 	###
 	#NER functionality
 	###
+	def ner_from_sent(self, model, sent, res_format='scibite',hits_only=False):
+		"""Pass a sentence within which you would like to identify examples of 
+		entities of a specific type
+		:param string model: The type of entity you want to identify
+		:param string sent: The sentence where you wish to identify the entities of interest
+		:param string res_format: The format of the response (by default it's scibite json)
+		:param boolean hits_only: If set to true will return the hits only and not the original
+		sentence(s) By default it is set to false"""
+		req = '/ner/predict_sentences'
+		data = {'model': model, 'sentences': sent, 'res_format' :res_format,'hits_only' : hits_only}
+		r = requests.post('http://' + self.scibiteai_url + req, params=data,auth=self.scibiteai_auth)
+		return r.json()
 
-
-	def ner_from_sent(self, models, sent, format_='scibite', hits_only=True, scibite_ai_addr=None,
-		scibite_ai_user=None, scibite_ai_pass=None):
-		'''
-		Pass a sentence within which you would like to identify examples of entities of specific
-		type(s).
-
-		:param array(string) models: List of named entity recognition models to use
-		:param string sent: The sentence in which you want to identify entities
-		:param string format_: The formatting style for your results, defaults to 'scinapse'
-		:param bool hits_only: Set to False to also return terms with no entity identified
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
-		if not self.models:
-			self.populate_models_dict()
-
-		if type(models) == str:
-			models = [models]
-
-		for model in models:
-			if self.models['ner'][model]['loaded'] == 'False':
-				self.load_model('ner', model)
-
-		models = ','.join(models)
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/ner/predict_sentences'
-		elif scibite_ai_addr.endswith('/ner'):
-			req = '/predict_sentences'
-		elif scibite_ai_addr.endswith('/predict_sentences'):
-			req = ''
-		else:
-			req = '/api/ner/predict_sentences'
-
-		data = {'model': models, 'sentence': sent, 'hits_only': hits_only, 'format': format_}
-
-		if not scibite_ai_user:
-			r = requests.get('http://' + scibite_ai_addr + req, data=data)
-		else:
-			r = requests.get('https://' + scibite_ai_addr + req, data=data, 
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
-		j = json.loads(r.text)
-
-		return j
-
-
-	def ner_from_doc(self, models, document, format_='scibite', hits_only=True, 
-		scibite_ai_addr=None, scibite_ai_user=None, scibite_ai_pass=None):
-		'''
-		Pass a document within which you would like to identify examples of entities of specific
-		type(s).
-
-		:param array(string) models: List of named entity recognition models to use
-		:param string document: The filepath of the document in which you want to identify entities
-		:param string format_: The formatting style for your results, defaults to 'scinapse'
-		:param bool hits_only: Set to False to also return terms with no entity identified
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
-		if not self.models:
-			self.populate_models_dict()
-
-		if type(models) == str:
-			models = [models]
-
-		for model in models:
-			if self.models['ner'][model]['loaded'] == 'False':
-				self.load_model('ner', model)
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/ner/predict_file'
-		elif scibite_ai_addr.endswith('/ner'):
-			req = '/predict_file'
-		elif scibite_ai_addr.endswith('/predict_file'):
-			req = ''
-		else:
-			req = '/api/ner/predict_file'
-
-		if not doctype:
-			doctype = document[::-1][:document[::-1].find('.')][::-1]
-
-		sents = []
-
-		if termite_addr:
-			#Call TERMite to split sentences...
-			binary = open(os.path.join(document), 'rb').read()
-
-			if termite_user:
-				data = {'binary': binary, 'format': doctype, 'termite_user': termite_user, 
-				'termite_pass': termite_pass}
-			else:
-				data = {'binary': binary, 'format': doctype}
-
-			r = requests.post(termite_addr+'/toolkit/docxsent.api', data=data)
-			j = r.json()
-			for sent in j['sentences'][0]:
-				sents.append(sent['sentence'])
-		else:
-			if doctype == 'txt':
-				sents = self.sent_detector.tokenize(open(document, 'r').read())
-			else:
-				raise Exception('TERMite is required to parse files that are not .txt format')
-
-		results = {}
-		for idx, sent in enumerate(sents):
-			pred = ner_from_sent(models=models, sent=sent, format=format, hits_only=hits_only)
-
-			results[idx] = pred
-
-		return results
-
-
+	def ner_from_file(self, model,file, res_format='scibite', hits_only=False):
+		"""Pass a document containing sentences within which you would like to identify examples of 
+		entities of a specific type
+		:param string model: The type of entity you want to identify
+		:param string file: The filepath of the document (.txt file) where you 
+		wish to identify the entities of interest
+		:param string res_format: The format of the response (by default it's scibite json)
+		:param boolean hits_only: If set to true will return the hits only and not the original
+		sentences within the document. By default it is set to false"""
+		req = '/ner/predict_file'
+		file_obj = open(file, 'rb')
+		file_name = os.path.basename(file)
+		data = {'model': model, 'res_format' :res_format,'hits_only' : hits_only}
+		r = requests.post('http://' + self.scibiteai_url + req, params=data, data ={},
+			files =  {"file": (file_name, file_obj)},auth=self.scibiteai_auth)
+		
+		return r.json()['task_id']
+	
 	###
 	#QA functionality
 	###
 
 
-	def qa_from_json(self, model, filepath,	scibite_ai_addr=None, scibite_ai_user=None, 
-		scibite_ai_pass=None):
-		'''
+	def qa_from_json(self, model, file):
+		"""
 		Pass a file containing SQuAD formatted json questions/contexts to answer said questions.
 
-		:param string model: The model trained to identify your relationship of interest
-		:param string filepath: The filepath of the document containing SQuAD formatted questions
+		:param string model: The model trained to answer the question
+		:param string file: The filepath of the document containing SQuAD formatted questions
 		you wish to have answered
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
-		if not self.models:
-			self.populate_models_dict()
-
-		if self.models['qa'][model]['loaded'] == 'False':
-			self.load_model('qa', model)
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/qa/answer_json_questions'
-		elif scibite_ai_addr.endswith('/qa'):
-			req = '/answer_json_questions'
-		elif scibite_ai_addr.endswith('/answer_json_questions'):
-			req = ''
-		else:
-			req = '/api/ner/answer_json_questions'
-
-		binary = open(filepath, 'rb')
-
-		data = {'file': binary, 'model': model}
-
-		if not scibite_ai_user:
-			r = requests.get('http://' + scibite_ai_addr + req, data=data)
-		else:
-			r = requests.get('https://' + scibite_ai_addr + req, data=data, 
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
-		j = json.loads(r.text)
-
-		return j
-
-
-	def qa_from_text():
-		raise NotImplementedError('To be implemented when methods are finalised')
-
-
-	###
-	#W2V functionality
-	###
-
-
-	def w2v_vector(self, model, word, scibite_ai_addr=None, scibite_ai_user=None, 
-		scibite_ai_pass=None, termite_addr=None, termite_user=None, termite_pass=None):
-		'''
-		Convert a word into a semantic vector using a w2v model.
-
-		:param string model: The w2v model you want to use to convert your word to a vector
-		:param string word: The word you wish to convert to a vector
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
-		if 'termite' in model.lower():
-			if not termite_addr:
-				termite_addr = self.termite_credentials['termite_addr']
-				termite_user = self.termite_credentials['termite_user']
-				termite_pass = self.termite_credentials['termite_pass']
-			if not termite_addr:
-				raise Exception('You must specify an address for a TERMite server to use TERMite models')
-			else:
-				self.termite_credentials['termite_addr'] = termite_addr
-
-		if not self.models:
-			self.populate_models_dict()
-
-		if self.models['ontology'][model]['loaded'] == 'False':
-			self.load_model('ontology', model)
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/ontology/vector'
-		elif scibite_ai_addr.endswith('/ontology'):
-			req = '/vector'
-		elif scibite_ai_addr.endswith('/vector'):
-			req = ''
-		else:
-			req = '/api/ontology/vector'
-
-		data = {'model': model, 'word': word}
-		if termite_addr:
-			data['termite_url'] = termite_addr
-		if termite_user:
-			data['termite_http_user'] = termite_user
-		if termite_pass:
-			data['termite_http_pass'] = termite_pass
+		"""
+		req='/qa/predict_json'
+		file_obj = open(file, 'rb')
+		file_name = os.path.basename(file)
+		data = {'model':model}
+		r = requests.post('http://' + self.scibiteai_url + req, params=data,
+			files =  {"file": (file_name, file_obj)},auth=self.scibiteai_auth)
+		return r.json()['task_id']
 		
-		if not scibite_ai_user:
-			r = requests.get('http://' + scibite_ai_addr + req, data=data)
-		else:
-			r = requests.get('https://' + scibite_ai_addr + req, data=data, 
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
-		j = json.loads(r.text)
-
-		return j
-
-
-	def w2v_most_similar(self, model, word, limit=5, filters=None, scibite_ai_addr=None,
-		scibite_ai_user=None, scibite_ai_pass=None, termite_addr=None, termite_user=None, 
-		termite_pass=None):
-		'''
-		Identify the words most similar to your root term using semantic vectors.
-
-		:param string model: The w2v model you want to use to convert your word to a vector
-		:param string word: The word you wish to convert to a vector
-		:param int limit: The number of similar words you would like to be returned
-		:param string filters: Filters to improve precision of final results, comma separated list
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
-
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
-
-		if 'termite' in model.lower():
-			if not termite_addr:
-				termite_addr = self.termite_credentials['termite_addr']
-				termite_user = self.termite_credentials['termite_user']
-				termite_pass = self.termite_credentials['termite_pass']
-			if not termite_addr:
-				raise Exception('You must specify an address for a TERMite server to use TERMite models')
-			else:
-				self.termite_credentials['termite_addr'] = termite_addr
-
-		if not self.models:
-			self.populate_models_dict()
-
-		if self.models['ontology'][model]['loaded'] == 'False':
-			self.load_model('ontology', model)
-
-		if scibite_ai_addr.endswith('/api'):
-			req = '/ontology/similar'
-		elif scibite_ai_addr.endswith('/ontology'):
-			req = '/similar'
-		elif scibite_ai_addr.endswith('/similar'):
-			req = ''
-		else:
-			req = '/api/ontology/similar'
-
-		data = {'model': model, 'word': word, 'limit': limit}
-		if termite_addr:
-			data['termite_url'] = termite_addr
-		if termite_user:
-			data['termite_http_user'] = termite_user
-		if termite_pass:
-			data['termite_http_pass'] = termite_pass
-
-		if filters:
-			data['filters'] = filters
-
-		if not scibite_ai_user:
-			r = requests.get('http://' + scibite_ai_addr + req, data=data)
-		else:
-			r = requests.get('https://' + scibite_ai_addr + req, data=data, 
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
-		j = json.loads(r.text)
-
-		return j
+	def qa_from_text(self, model, question, context):
+		"""
+		Pass a question and the given context to get an answer to said question
+		:param string model: The model trained to answer the question
+		:param string question: The question we want answered
+		:param string context: The context where the answered may be found. Usually
+		a paragraph.
+		"""
+		req='/qa/predict_text'
+		data = {'model': model, 'context':context, 'question':question}
+		r = requests.post('http://' + self.scibiteai_url + req, params=data,
+			auth=self.scibiteai_auth)
+		return r.json()
+		
+	###
+	#RE functionality
+	###
 
 
-	def w2v_algebra(self, model, algebra, limit=1, scibite_ai_addr=None, scibite_ai_user=None, 
-		scibite_ai_pass=None, termite_addr=None, termite_user=None, termite_pass=None):
-		'''
-		Use word vectors to perform additions and subtractions within a semantic embedding space.
+	def relex_from_sent(self, model, sent,split_paragraphs=True):
+		"""
+		Pass a sentence within which you would like to identify a relationship using a specific 
+		model.
 
-		:param string model: The w2v model you want to use to convert words to vectors
-		:param string algebra: The algebra string to calculate (e.g. 'london-england+france')
-		:param int limit: How many results to return
-		:param string scibite_ai_addr: Address for the SciBite AI server (e.g. 127.0.0.1:8000)
-		:param string scibite_ai_user: Username for the SciBite AI server http (if required)
-		:param string scibite_ai_pass: Password for the SciBite AI server http (if required)
-		'''
+		:param string model: The model trained to identify your relationship of interest
+		:param string sent: The sentence you wish to assess for your relationship of interest
+		:param boolean split_paragraphs: Split text into paragraphs or keep it as whole
+		"""
+		req = '/re/predict_sentences'
 
-		if not scibite_ai_addr:
-			scibite_ai_addr = self.scibite_ai_credentials['scibite_ai_addr']
-			scibite_ai_user = self.scibite_ai_credentials['scibite_ai_user']
-			scibite_ai_pass = self.scibite_ai_credentials['scibite_ai_pass']
-		if not scibite_ai_addr:
-			raise Exception('You must specify an address for the SciBite.ai server')
-		else:
-			self.scibite_ai_credentials['scibite_ai_addr'] = scibite_ai_addr
+		data = {'model': model, 'sentences': sent, 'split' :split_paragraphs}
+		data['termite_url'] = self.termite_url
+		if self.termite_auth:
+			data['termite_http_user'] = self.termite_auth[0]
+			data['termite_http_pass'] = self.termite_auth[1]
 
-		if 'termite' in model.lower():
-			if not termite_addr:
-				termite_addr = self.termite_credentials['termite_addr']
-				termite_user = self.termite_credentials['termite_user']
-				termite_pass = self.termite_credentials['termite_pass']
-			if not termite_addr:
-				raise Exception('You must specify an address for a TERMite server to use TERMite models')
-			else:
-				self.termite_credentials['termite_addr'] = termite_addr
+		r = requests.post('http://' + self.scibiteai_url + req, params=data,auth=self.scibiteai_auth)
+		return r.json()
 
-		if not self.models:
-			self.populate_models_dict()
 
-		if self.models['ontology'][model]['loaded'] == 'False':
-			self.load_model('ontology', model)
+	def relex_from_file(self, model, file,return_negatives = False):
+		"""
+		Pass a document within which you would like to identify sentences containing relationships 
+		using a specific model. Returns the task id
 
-		if scibite_ai_addr.endswith('/api'):
-			req = '/ontology/algebra'
-		elif scibite_ai_addr.endswith('/ontology'):
-			req = '/algebra'
-		elif scibite_ai_addr.endswith('/algebra'):
-			req = ''
-		else:
-			req = '/api/ontology/algebra'
+		:param string model: The model trained to identify your relationship of interest
+		:param string document: The filepath of the document you wish to search for your 
+		relationship of interest
+		"""
+		req = '/re/predict_file'
+		file_obj = open(file, 'rb')
+		file_name = os.path.basename(file)
+		data = {'model': model}
+		if self.termite_auth:
+			data['termite_http_user'] = self.termite_auth[0]
+			data['termite_http_pass'] = self.termite_auth[1]
 
-		data = {'model': model, 'algebra': algebra, 'limit': limit}
-		if termite_addr:
-			data['termite_url'] = termite_addr
-		if termite_user:
-			data['termite_http_user'] = termite_user
-		if termite_pass:
-			data['termite_http_pass'] = termite_pass
+		r = requests.post('http://' + self.scibiteai_url + req, params=data, data ={},
+			files =  {"file": (file_name, file_obj)},auth=self.scibiteai_auth)
+		
+		return r.json()['task_id']
 
-		if not scibite_ai_user:
-			r = requests.get('http://' + scibite_ai_addr + req, data=data)
-		else:
-			r = requests.get('https://' + scibite_ai_addr + req, data=data, 
-				auth=HTTPBasicAuth(scibite_ai_user, scibite_ai_pass))
-
-		j = json.loads(r.text)
-
-		return j
-
+	def task_status(self,task_id):
+		"""
+		Gets thte task status for the task_id provided
+		:param string task_id: The task_id for the task we're interested in
+		"""
+		req = '/tasks/'+task_id+'/status'
+		r = requests.get('http://' + self.scibiteai_url + req)
+		return r.json()['task_status']
+	def task_results(self,task_id):
+		"""
+		Downloads the json output for the task_id provided
+		:param string task_id: The task_id for the task we're interested in
+		"""
+		req = '/tasks/'+task_id+'/download'
+		r = requests.get('http://' + self.scibiteai_url + req)
+		return r.json()
+	
+###
+# Helper Functions		
+###
 
 def get_hits(termiteTags, hierarchy=None, vocabs=None):
 	'''
-	Helper function. Uses termiteTags and hierarchy to collect info on the highest priority hits.
+	Uses termiteTags and hierarchy to collect info on the highest priority hits.
 
 	:param array termiteTags: Locations of TERMite hits found, extracted from the TERMite json
 	:param dict hierarchy: Dictionary with a hierarchy of vocabs to prioritise in case of overlap
@@ -1060,7 +447,6 @@ def label(docjsonx, vocabs, labelLevel='word'):
 	'''
 
 	results = {}
-	substitutions = []
 	hierarchy = {}
 	for idx, vocab in enumerate(vocabs):
 		hierarchy[vocab] = idx

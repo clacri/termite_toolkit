@@ -1,0 +1,7 @@
+In monoculture   experiments, BV2 cells were divided into control, @GENE$ interference (CD38Ri),   negative control (NC), LPS, CD38Ri+LPS, NC+LPS and 8-Br-@DRUG$+LPS groups.
+In co-culture experiments, N2a cells were co-cultured with BV2 cells for 48 h.   @DRUG$ (NAD + ), @DRUG$ and intracellular Ca  2+  levels and   @GENE$ expression increased significantly in LPS-stimulated BV2 cells.
+@GENE$   knockdown or 8-Br-@DRUG$ treatment significantly reduced NAD + , @DRUG$ and   intracellular Ca 2+   levels.
+@GENE$ knockdown increased iNOS and NO levels in BV2   cells without LPS treatment; however, @GENE$ knockdown or 8-Br-@DRUG$ treatment   reduced iNOS and NO levels in BV2 cells with LPS treatment.
+@GENE$ knockdown   increased the ratio of TUNEL positive cells and cleaved @GENE$/ @GENE$ ratio,   and decreased the @GENE$/ Bax ratio in BV2 cells without LPS treatment; however,   @GENE$ knockdown reduced the TUNEL positivity in BV2 cells with LPS treatment.
+@GENE$ knockdown or 8-Br-@DRUG$ inhibited @GENE$, @GENE$ (@GENE$) and @GENE$   levels in LPS-stimulated BV2 cells.
+Co-culture with @GENE$ knockdown or 8-Br-  @DRUG$-treated BV2 cells did not influence apoptosis or @GENE$ expression in N2a   cells.
