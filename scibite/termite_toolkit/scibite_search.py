@@ -13,7 +13,7 @@ SearchRequestBuilder- make requests to the Scibite Search API and process result
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.4.6'
+__version__ = '0.4.7'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -75,7 +75,7 @@ class SBSRequestBuilder():
         if query:
             options["queries"]=query
 
-        req = requests.get(self.url+"/api/search/v1/documents/",params = options, headers = self.headers)
+        req = requests.get(self.url+"/api/search/v1/documents",params = options, headers = self.headers,verify=self.verify_request)
         return req.json()
 	
     def get_document(self,document_id, query='',markup = True):
@@ -86,7 +86,7 @@ class SBSRequestBuilder():
         options ={"markup":markup}
         if query:
             options["queries"]=query
-        req = requests.get(self.url + "/api/search/v1/documents/"+document_id, params = options, headers = self.headers)
+        req = requests.get(self.url + "/api/search/v1/documents/"+document_id, params = options, headers = self.headers,verify=self.verify_request)
         return req.json()
 	
     def get_sentences(self,query='',markup =True, limit =20, offset =0):
@@ -100,7 +100,7 @@ class SBSRequestBuilder():
         if query:
             options["queries"]=query
 
-        req = requests.get(self.url+"/api/search/v1/sentences/",params = options, headers = self.headers)
+        req = requests.get(self.url+"/api/search/v1/sentences/",params = options, headers = self.headers,verify=self.verify_request)
         return req.json()
 	
     def get_aggregates(self,query='',vocabs = [], sentences = True, significant = False, limit = 20, offset = 0):
@@ -118,27 +118,27 @@ class SBSRequestBuilder():
             options["queries"]=query
         if sentences:
             if significant:
-                req = requests.get(self.url+"/api/search/v1/sentence-aggregates/significant-entity",params = options, headers = self.headers)
+                req = requests.get(self.url+"/api/search/v1/sentence-aggregates/significant-entity",params = options, headers = self.headers,verify=self.verify_request)
             else:
-                req = requests.get(self.url+"/api/search/v1/sentence-aggregates/entity",params = options, headers = self.headers)
+                req = requests.get(self.url+"/api/search/v1/sentence-aggregates/entity",params = options, headers = self.headers,verify=self.verify_request)
         else:
             if significant:
-                req = requests.get(self.url+"/api/search/v1/document-aggregates/significant-entity",params = options, headers = self.headers)
+                req = requests.get(self.url+"/api/search/v1/document-aggregates/significant-entity",params = options, headers = self.headers,verify=self.verify_request)
             else:
-                req = requests.get(self.url+"/api/search/v1/document-aggregates/entity",params = options, headers = self.headers)			
+                req = requests.get(self.url+"/api/search/v1/document-aggregates/entity",params = options, headers = self.headers,verify=self.verify_request)			
         return req.json()
 
     def entity_mentions (self,text):
         """This endpoint annotates a text string with termite annotations.
         Efectively it works as an API endpoint"""
         options = {"text":text}
-        req = requests.get(self.url+"/jobserver/v1/entitymentions", params = options,headers = self.headers)
+        req = requests.get(self.url+"/jobserver/v1/entitymentions", params = options,headers = self.headers,verify=self.verify_request)
         return req.json()
 
     def document_schemas (self,json_body):
         """This endpoint posts a new document schema to a ScibiteSearch instance"""
         headers = self.headers
         headers['Content-type']='application/json' 
-        requests.post(self.url+ '/api/search/v1/document-schemas', json = json_body,headers = headers)
+        requests.post(self.url+ '/api/search/v1/document-schemas', json = json_body,headers = headers,verify=self.verify_request)
 
         
