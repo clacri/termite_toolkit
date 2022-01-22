@@ -12,7 +12,7 @@ TERMiteRequestBuilder- make requests to the TERMite API and process results.
 """
 
 __author__ = 'SciBite DataScience'
-__version__ = '0.4.7'
+__version__ = '0.4.8'
 __copyright__ = '(c) 2019, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
@@ -38,7 +38,6 @@ class TermiteRequestBuilder():
         self.headers ={}
         self.verify_request = True
 
-
     def set_basic_auth(self, username='', password='', verification=True):
         """
         Pass basic authentication credentials
@@ -51,7 +50,7 @@ class TermiteRequestBuilder():
         """
         self.basic_auth = (username, password)
         self.verify_request = verification
-        
+
     def set_oauth2(self, token_user, token_pw, verification = True, token_address = "https://api.healthcare.elsevier.com:443/token"):
         """Pass username and password for the Elsevier token api
         It then uses these credentials to generate an access token and adds 
@@ -62,8 +61,6 @@ class TermiteRequestBuilder():
         """
         auth64 = base64.b64encode(bytearray(token_user+":"+token_pw,'utf8')) #base64 encoded Username+password
         auth64 = auth64.decode ('utf8')
-            
-        
         token_address = token_address or "https://api.healthcare.elsevier.com:443/token"
         req = requests.post(token_address, data= {"grant_type": "client_credentials"}, 
             headers = {"Authorization": "Basic "+ auth64, "Content-Type": "application/x-www-form-urlencoded"})
@@ -129,7 +126,15 @@ class TermiteRequestBuilder():
         :param string: text to be sent to TERMite
         """
         self.payload["text"] = string
-    
+
+    def set_bundle(self, string):
+        """
+        Use this for specifying a TERMite bundle to use
+
+        :param string: string variable to specify a bundle name
+        """
+        self.payload["bundle"] = string
+
     def set_df(self,dataframe):
         """Use this for tagging pandas dataframes"""
         
@@ -214,6 +219,18 @@ class TermiteRequestBuilder():
         :param string: provide the output format to be used
         """
         self.payload["output"] = string
+
+    def set_reject_minor_hits(self, bool):
+        """
+        Reject highly suspicious hits (normally true)
+
+        :param bool: set True to reject highly suspicious hits
+        """
+        input = bool_to_string(bool)
+        if "opts" in self.payload:
+            self.payload["opts"] = self.payload["opts"] + "&rejectMinorHits=" + input
+        else:
+            self.payload["opts"] = "rejectMinorHits=" + input
 
     def set_reject_ambiguous(self, bool):
         """
