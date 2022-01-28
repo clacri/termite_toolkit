@@ -17,10 +17,11 @@ __copyright__ = '(c) 2020, SciBite Ltd'
 __license__ = 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License'
 
 
-import json
 import os
+import json
 import requests
 import nltk.data
+import urllib.parse
 import termite_toolkit.termite as termite
 
 class SciBiteAIClient():
@@ -31,6 +32,15 @@ class SciBiteAIClient():
 		self.scibiteai_auth = ()
 		self.termite_url =''
 		self.termite_auth = ()
+
+	def encode_data_for_url(self, data):
+		url_str = '?'
+		for idx, datum in enumerate(data):
+			if idx != 0:
+				url_str += '&'
+			url_str += ('%s=' % datum + urllib.parse.quote(str(data[datum])))
+		return url_str
+
 
 	###
 	#Core functionality
@@ -96,7 +106,7 @@ class SciBiteAIClient():
 		"""
 		req = '/models/%s/load' % model_type
 		data = {'model': model}
-		r = requests.post('http://'+ self.scibiteai_url + req, params=data,auth=self.scibiteai_auth)
+		r = requests.post('http://'+ self.scibiteai_url + req + self.encode_data_for_url(data), auth=self.scibiteai_auth)
 		return r.json()
 
 
@@ -109,29 +119,29 @@ class SciBiteAIClient():
 		"""
 		req = '/models/%s/unload' % model_type
 		data = {'model': model}
-		r = requests.post('http://'+ self.scibiteai_url + req, params=data,auth=self.scibiteai_auth)
+		r = requests.post('http://'+ self.scibiteai_url + req + self.encode_data_for_url(data), auth=self.scibiteai_auth)
 		return r.json()
 
 	###
 	#NER functionality
 	###
-	def ner_from_sent(self, model, sent, res_format='scibite',hits_only=False):
+	def ner_from_sent(self, models, sent, res_format='scibite',hits_only=False):
 		"""Pass a sentence within which you would like to identify examples of 
 		entities of a specific type
-		:param string model: The type of entity you want to identify
+		:param string models: The type of entities you want to identify
 		:param string sent: The sentence where you wish to identify the entities of interest
 		:param string res_format: The format of the response (by default it's scibite json)
 		:param boolean hits_only: If set to true will return the hits only and not the original
 		sentence(s) By default it is set to false"""
 		req = '/ner/predict_sentences'
-		data = {'model': model, 'sentences': sent, 'res_format' :res_format,'hits_only' : hits_only}
-		r = requests.post('http://' + self.scibiteai_url + req, params=data,auth=self.scibiteai_auth)
+		data = {'models': models, 'sentences': sent, 'res_format': res_format, 'hits_only': hits_only}
+		r = requests.post('http://' + self.scibiteai_url + req + self.encode_data_for_url(data), auth=self.scibiteai_auth)
 		return r.json()
 
-	def ner_from_file(self, model,file, res_format='scibite', hits_only=False):
+	def ner_from_file(self, models, file, res_format='scibite', hits_only=False):
 		"""Pass a document containing sentences within which you would like to identify examples of 
 		entities of a specific type
-		:param string model: The type of entity you want to identify
+		:param string models: The type of entities you want to identify
 		:param string file: The filepath of the document (.txt file) where you 
 		wish to identify the entities of interest
 		:param string res_format: The format of the response (by default it's scibite json)
@@ -140,8 +150,8 @@ class SciBiteAIClient():
 		req = '/ner/predict_file'
 		file_obj = open(file, 'rb')
 		file_name = os.path.basename(file)
-		data = {'model': model, 'res_format' :res_format,'hits_only' : hits_only}
-		r = requests.post('http://' + self.scibiteai_url + req, params=data, data ={},
+		data = {'models': models, 'res_format' :res_format,'hits_only' : hits_only}
+		r = requests.post('http://' + self.scibiteai_url + req + self.encode_data_for_url(data),
 			files =  {"file": (file_name, file_obj)},auth=self.scibiteai_auth)
 		
 		return r.json()['task_id']
@@ -163,7 +173,7 @@ class SciBiteAIClient():
 		file_obj = open(file, 'rb')
 		file_name = os.path.basename(file)
 		data = {'model':model}
-		r = requests.post('http://' + self.scibiteai_url + req, params=data,
+		r = requests.post('http://' + self.scibiteai_url + req + self.encode_data_for_url(data), 
 			files =  {"file": (file_name, file_obj)},auth=self.scibiteai_auth)
 		return r.json()['task_id']
 		
@@ -177,8 +187,7 @@ class SciBiteAIClient():
 		"""
 		req='/qa/predict_text'
 		data = {'model': model, 'context':context, 'question':question}
-		r = requests.post('http://' + self.scibiteai_url + req, params=data,
-			auth=self.scibiteai_auth)
+		r = requests.post('http://' + self.scibiteai_url + req + self.encode_data_for_url(data), auth=self.scibiteai_auth)
 		return r.json()
 		
 	###
@@ -186,45 +195,45 @@ class SciBiteAIClient():
 	###
 
 
-	def relex_from_sent(self, model, sent,split_paragraphs=True):
+	def re_from_sent(self, models, sent,split_paragraphs=True):
 		"""
 		Pass a sentence within which you would like to identify a relationship using a specific 
 		model.
 
-		:param string model: The model trained to identify your relationship of interest
+		:param string models: The models trained to identify your relationships of interest
 		:param string sent: The sentence you wish to assess for your relationship of interest
 		:param boolean split_paragraphs: Split text into paragraphs or keep it as whole
 		"""
 		req = '/re/predict_sentences'
 
-		data = {'model': model, 'sentences': sent, 'split' :split_paragraphs}
+		data = {'models': models, 'sentences': sent, 'split' :split_paragraphs}
 		data['termite_url'] = self.termite_url
 		if self.termite_auth:
 			data['termite_http_user'] = self.termite_auth[0]
 			data['termite_http_pass'] = self.termite_auth[1]
 
-		r = requests.post('http://' + self.scibiteai_url + req, params=data,auth=self.scibiteai_auth)
+		r = requests.post('http://' + self.scibiteai_url + req + self.encode_data_for_url(data), auth=self.scibiteai_auth)
 		return r.json()
 
 
-	def relex_from_file(self, model, file,return_negatives = False):
+	def re_from_file(self, models, file,return_negatives = False):
 		"""
 		Pass a document within which you would like to identify sentences containing relationships 
 		using a specific model. Returns the task id
 
-		:param string model: The model trained to identify your relationship of interest
+		:param string models: The models trained to identify your relationships of interest
 		:param string document: The filepath of the document you wish to search for your 
 		relationship of interest
 		"""
 		req = '/re/predict_file'
 		file_obj = open(file, 'rb')
 		file_name = os.path.basename(file)
-		data = {'model': model}
+		data = {'models': models}
 		if self.termite_auth:
 			data['termite_http_user'] = self.termite_auth[0]
 			data['termite_http_pass'] = self.termite_auth[1]
 
-		r = requests.post('http://' + self.scibiteai_url + req, params=data, data ={},
+		r = requests.post('http://' + self.scibiteai_url + req + self.encode_data_for_url(data), 
 			files =  {"file": (file_name, file_obj)},auth=self.scibiteai_auth)
 		
 		return r.json()['task_id']
