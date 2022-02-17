@@ -14,7 +14,9 @@ setuptools.setup(name='termite_toolkit',
                  description='Python library for calling TERMite and TExpress and processing results',
                  url='https://github.com/SciBiteLabs/termite_toolkit',
                  install_requires=[
-                     "requests>=2.8.1"
+                     "requests>=2.8.1",
+                     "pandas>=0.23.4",
+                     "nltk>=3.3"
                  ],
                  author='SciBite DataScience',
                  author_email='joe@scibite.com',
