@@ -128,10 +128,13 @@ class SBSRequestBuilder():
                 req = requests.get(self.url+"/api/search/v1/document-aggregates/entity",params = options, headers = self.headers,verify=self.verify_request)			
         return req.json()
 
-    def entity_mentions (self,text):
+    def entity_mentions (self,text,entities=None):
         """This endpoint annotates a text string with termite annotations.
         Efectively it works as an API endpoint"""
-        options = {"text":text}
+        if entities:
+            options = {"text":text, entities=entities}
+        else:
+            options = {"text":text}
         req = requests.get(self.url+"/jobserver/v1/entitymentions", params = options,headers = self.headers,verify=self.verify_request)
         return req.json()
 
