@@ -132,7 +132,7 @@ class SBSRequestBuilder():
         """This endpoint annotates a text string with termite annotations.
         Efectively it works as an API endpoint"""
         if entities:
-            options = {"text":text, entities=entities}
+            options = {"text":text, "entities":entities}
         else:
             options = {"text":text}
         req = requests.get(self.url+"/jobserver/v1/entitymentions", params = options,headers = self.headers,verify=self.verify_request)
