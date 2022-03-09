@@ -64,7 +64,7 @@ class SBSRequestBuilder():
         """
         self.url = url.rstrip('/')
         
-    def get_docs(self,query ='',markup=True, limit = 20,offset = 0):
+    def get_docs(self,query ='', markup=True, limit = 20,offset = 0, additional_fields=[]):
         """This endpoint allows searching and retrieval of documents. 
 		:query: SSQL query
 		:markup: Whether annotated text should markup the entities
@@ -74,6 +74,8 @@ class SBSRequestBuilder():
         options ={"markup":markup,"limit":limit, "offset":offset}
         if query:
             options["queries"]=query
+        if additional_fields:
+            options["fields"]=additional_fields
 
         req = requests.get(self.url+"/api/search/v1/documents",params = options, headers = self.headers,verify=self.verify_request)
         return req.json()
@@ -86,6 +88,8 @@ class SBSRequestBuilder():
         options ={"markup":markup}
         if query:
             options["queries"]=query
+        
+
         req = requests.get(self.url + "/api/search/v1/documents/"+document_id, params = options, headers = self.headers,verify=self.verify_request)
         return req.json()
 	
